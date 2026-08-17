@@ -1,6 +1,8 @@
 import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
+import path from 'path';
+import { fileURLToPath } from 'url';
 import connectDB from './config/db.js';
 import authRoutes from './routes/auth.js';
 import recordRoutes from './routes/records.js';
@@ -115,14 +117,26 @@ app.use('/api/records', recordRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/hospitals', hospitalRoutes);
 
-// Health Check & Database Status Route
+// Serve static frontend in production (Single Web Service Deployment)
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+const distPath = path.join(__dirname, '../dist');
+
+app.use(express.static(distPath));
+
+// Health Check Route
 app.get('/api/health', (req, res) => {
   res.json({
     status: 'online',
-    service: 'TitanVitals Backend API',
-    database: 'MongoDB (mongodb://localhost:27017/titanvitals)',
+    service: 'TitanVitals Fullstack Platform',
     timestamp: new Date().toISOString()
   });
+});
+
+// Wildcard Fallback for React Router SPA
+app.get('*', (req, res, next) => {
+  if (req.path.startsWith('/api')) return next();
+  res.sendFile(path.join(distPath, 'index.html'));
 });
 
 // Error handling middleware
