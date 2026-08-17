@@ -145,7 +145,11 @@ app.use((err, req, res, next) => {
   res.status(500).json({ success: false, message: err.message || 'Internal Server Error' });
 });
 
-app.listen(PORT, () => {
-  console.log(`🚀 TitanVitals Real-Time Backend running on http://localhost:${PORT}`);
-  console.log(`🗄️ Connected to MongoDB: ${process.env.MONGODB_URI || 'mongodb://localhost:27017/titanvitals'}`);
-});
+if (process.env.NODE_ENV !== 'production' || !process.env.VERCEL) {
+  app.listen(PORT, () => {
+    console.log(`🚀 TitanVitals Real-Time Backend running on http://localhost:${PORT}`);
+    console.log(`🗄️ Connected to MongoDB: ${process.env.MONGODB_URI || 'mongodb://localhost:27017/titanvitals'}`);
+  });
+}
+
+export default app;
