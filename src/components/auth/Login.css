@@ -361,11 +361,34 @@
 .welcome-caption {
   font-size: 0.9rem;
   color: var(--text-secondary);
-  line-height: 1.4;
+  line-height: 1.45;
+  word-break: break-word;
+  overflow-wrap: anywhere;
+  max-width: 100%;
 }
 
 .text-cyan {
   color: var(--accent-cyan);
+  word-break: break-all;
+  overflow-wrap: anywhere;
+  display: inline-block;
+  max-width: 100%;
+  padding: 3px 10px;
+  background: rgba(0, 212, 255, 0.08);
+  border: 1px solid rgba(0, 212, 255, 0.2);
+  border-radius: 8px;
+  margin-top: 5px;
+  font-size: 0.84rem;
+  line-height: 1.35;
+}
+
+.otp-verification-section .field-label {
+  justify-content: center !important;
+  text-align: center !important;
+  font-size: 0.78rem;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  color: var(--text-secondary);
 }
 
 /* Form Styles - Spacious and Clear */
@@ -915,6 +938,34 @@
 
 .clipboard-icon {
   font-size: 0.85rem;
+}
+
+@media (max-width: 440px) {
+  .otp-boxes-wrapper {
+    gap: 6px !important;
+  }
+  .otp-digit-box {
+    width: 40px !important;
+    height: 48px !important;
+    min-width: 40px !important;
+    max-width: 40px !important;
+    font-size: 1.2rem !important;
+    border-radius: 10px !important;
+  }
+}
+
+@media (max-width: 360px) {
+  .otp-boxes-wrapper {
+    gap: 4px !important;
+  }
+  .otp-digit-box {
+    width: 35px !important;
+    height: 44px !important;
+    min-width: 35px !important;
+    max-width: 35px !important;
+    font-size: 1.1rem !important;
+    border-radius: 8px !important;
+  }
 }
 
 .resend-timer-text {
