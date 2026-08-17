@@ -111,20 +111,26 @@ const Login = () => {
 
     if (isSignUp) {
       // Step 1: Send OTP to email
-      toast.loading('Sending verification code to your email...', { id: 'auth' });
+      toast.loading('Generating verification code...', { id: 'auth' });
       try {
         const fullPhone = phone.trim() ? `${countryCode} ${phone.trim()}` : '';
-        await sendSignupOtp({
+        const res = await sendSignupOtp({
           name: name.trim() || 'Alex Mercer',
           email: email.trim(),
           password,
           bloodGroup,
           phone: fullPhone
         });
-        setIsLoading(false);
         setIsOtpStep(true);
         setResendTimer(60);
+        if (res?.otp) {
+          toast.success(`Verification code: ${res.otp}`, { id: 'auth', duration: 10000 });
+        } else {
+          toast.success(`Verification code dispatched to ${email.trim()}`, { id: 'auth' });
+        }
       } catch (err) {
+        // error already toasted in AuthContext
+      } finally {
         setIsLoading(false);
       }
     } else {
@@ -132,10 +138,11 @@ const Login = () => {
       toast.loading('Verifying credentials...', { id: 'auth' });
       try {
         await login(email.trim(), password);
-        setIsLoading(false);
         toast.success('Login Successful! Welcome to TitanVitals.', { id: 'auth' });
         navigate('/dashboard');
       } catch (err) {
+        // error already toasted
+      } finally {
         setIsLoading(false);
       }
     }

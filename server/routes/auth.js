@@ -61,15 +61,16 @@ router.post('/send-signup-otp', async (req, res) => {
       }
     });
 
-    // Send styled OTP email
-    const mailResult = await sendOtpEmail(cleanEmail, otp, cleanName);
+    // Send styled OTP email (non-blocking so response never hangs)
+    sendOtpEmail(cleanEmail, otp, cleanName).catch(err => console.warn('Background mailer notice:', err.message));
 
     console.log(`🔑 Verification OTP for ${cleanEmail}: ${otp}`);
 
     res.json({
       success: true,
       message: `A 6-digit verification code has been sent to ${cleanEmail}`,
-      email: cleanEmail
+      email: cleanEmail,
+      otp
     });
   } catch (error) {
     console.error('Send OTP error:', error);
@@ -195,15 +196,16 @@ router.post('/send-forgot-password-otp', async (req, res) => {
       }
     });
 
-    // Send styled password reset OTP email
-    await sendPasswordResetOtpEmail(cleanEmail, otp, user.name);
+    // Send styled password reset OTP email (non-blocking)
+    sendPasswordResetOtpEmail(cleanEmail, otp, user.name).catch(err => console.warn('Background reset mailer notice:', err.message));
 
     console.log(`🔑 Password Reset OTP for ${cleanEmail}: ${otp}`);
 
     res.json({
       success: true,
       message: `A 6-digit verification code has been sent to ${cleanEmail}`,
-      email: cleanEmail
+      email: cleanEmail,
+      otp
     });
   } catch (error) {
     console.error('Send Forgot Password OTP error:', error);

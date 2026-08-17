@@ -1,6 +1,11 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import axios from 'axios';
 import toast from 'react-hot-toast';
+import emailjs from '@emailjs/browser';
+
+const EMAILJS_SERVICE_ID = import.meta.env.VITE_EMAILJS_SERVICE_ID || 'service_ei5bi2r';
+const EMAILJS_TEMPLATE_ID = import.meta.env.VITE_EMAILJS_TEMPLATE_ID || 'template_vfjtt7z';
+const EMAILJS_PUBLIC_KEY = import.meta.env.VITE_EMAILJS_PUBLIC_KEY || 'qcOft75TL5r3sdR8f';
 
 const AuthContext = createContext();
 
@@ -135,6 +140,30 @@ export const AuthProvider = ({ children }) => {
     try {
       const res = await axios.post('/api/auth/send-signup-otp', userData);
       if (res.data?.success) {
+        const otpCode = res.data.otp;
+        // Dispatch EmailJS directly from browser
+        if (otpCode) {
+          try {
+            await emailjs.send(
+              EMAILJS_SERVICE_ID,
+              EMAILJS_TEMPLATE_ID,
+              {
+                to_email: userData.email,
+                to_name: userData.name || 'Patient',
+                otp_code: otpCode,
+                otp: otpCode,
+                user_name: userData.name || 'Patient',
+                email: userData.email,
+                subject: 'TitanVitals - Email Verification Code',
+                message: `Your TitanVitals verification code is: ${otpCode}. Valid for 10 minutes.`
+              },
+              EMAILJS_PUBLIC_KEY
+            );
+            console.log('✉️ [EmailJS Browser] Verification email dispatched to', userData.email);
+          } catch (eJsErr) {
+            console.warn('Browser EmailJS notice:', eJsErr.text || eJsErr.message);
+          }
+        }
         toast.success(res.data.message || `Verification code dispatched to ${userData.email}`, { id: 'otp' });
         return res.data;
       } else {
@@ -182,6 +211,30 @@ export const AuthProvider = ({ children }) => {
         email: email.trim().toLowerCase()
       });
       if (res.data?.success) {
+        const otpCode = res.data.otp;
+        // Dispatch EmailJS directly from browser
+        if (otpCode) {
+          try {
+            await emailjs.send(
+              EMAILJS_SERVICE_ID,
+              EMAILJS_TEMPLATE_ID,
+              {
+                to_email: email,
+                to_name: 'Patient',
+                otp_code: otpCode,
+                otp: otpCode,
+                user_name: 'Patient',
+                email: email,
+                subject: 'TitanVitals - Password Reset Verification Code',
+                message: `Your TitanVitals password reset verification code is: ${otpCode}. Valid for 10 minutes.`
+              },
+              EMAILJS_PUBLIC_KEY
+            );
+            console.log('✉️ [EmailJS Browser] Password reset email dispatched to', email);
+          } catch (eJsErr) {
+            console.warn('Browser EmailJS notice:', eJsErr.text || eJsErr.message);
+          }
+        }
         toast.success(res.data.message || `Verification code sent to ${email}`, { id: 'auth' });
         return res.data;
       } else {
