@@ -817,6 +817,106 @@
   margin-top: 10px;
 }
 
+/* ========================================================
+   SECURE 6-BOX OTP SEGMENTED INPUT & AUTO-FILL
+   ======================================================== */
+.secure-otp-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  margin: 6px 0;
+}
+
+.otp-boxes-wrapper {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+}
+
+.otp-digit-box {
+  width: 46px !important;
+  height: 54px !important;
+  min-width: 46px !important;
+  max-width: 46px !important;
+  font-size: 1.4rem !important;
+  font-weight: 800 !important;
+  text-align: center !important;
+  border-radius: 12px !important;
+  background: var(--bg-primary, rgba(0, 0, 0, 0.4)) !important;
+  border: 1.5px solid var(--border-color, rgba(255, 255, 255, 0.15)) !important;
+  color: #00d4ff !important;
+  font-family: 'Courier New', monospace, sans-serif !important;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1) !important;
+  padding: 0 !important;
+  caret-color: #00d4ff !important;
+}
+
+.otp-digit-box:focus {
+  outline: none !important;
+  border-color: #00d4ff !important;
+  background: rgba(0, 212, 255, 0.08) !important;
+  box-shadow: 0 0 16px rgba(0, 212, 255, 0.4) !important;
+  transform: translateY(-2px) scale(1.05) !important;
+}
+
+.otp-digit-box.filled {
+  border-color: rgba(0, 212, 255, 0.6) !important;
+  background: rgba(0, 212, 255, 0.05) !important;
+  color: #ffffff !important;
+}
+
+[data-theme="light"] .otp-digit-box {
+  background: #f8fafc !important;
+  border-color: #cbd5e1 !important;
+  color: #0284c7 !important;
+}
+
+[data-theme="light"] .otp-digit-box:focus {
+  border-color: #0284c7 !important;
+  background: rgba(2, 132, 199, 0.08) !important;
+  box-shadow: 0 0 14px rgba(2, 132, 199, 0.3) !important;
+}
+
+[data-theme="light"] .otp-digit-box.filled {
+  border-color: #0284c7 !important;
+  color: #0f172a !important;
+}
+
+.otp-helper-actions {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.otp-clipboard-btn {
+  background: rgba(0, 212, 255, 0.08) !important;
+  border: 1px dashed rgba(0, 212, 255, 0.3) !important;
+  color: #00d4ff !important;
+  font-size: 0.78rem !important;
+  font-weight: 700 !important;
+  padding: 5px 12px !important;
+  border-radius: 8px !important;
+  cursor: pointer !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 6px !important;
+  transition: all 0.2s ease !important;
+}
+
+.otp-clipboard-btn:hover {
+  background: rgba(0, 212, 255, 0.18) !important;
+  border-color: #00d4ff !important;
+  transform: translateY(-1px) !important;
+}
+
+.clipboard-icon {
+  font-size: 0.85rem;
+}
+
 .resend-timer-text {
   font-size: 0.85rem;
   color: var(--text-secondary);

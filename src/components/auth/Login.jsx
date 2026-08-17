@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useGoogleLogin } from '@react-oauth/google';
 import { useAuth } from '../../context/AuthContext';
@@ -18,10 +18,130 @@ import {
   FaLock,
   FaUser,
   FaUserShield,
-  FaCheckCircle
+  FaCheckCircle,
+  FaPaste,
+  FaClipboardCheck
 } from 'react-icons/fa';
 import toast from 'react-hot-toast';
 import './Login.css';
+
+// ========================================================
+// SECURE 6-BOX OTP INPUT WITH NATIVE & CLIPBOARD AUTO-FILL
+// ========================================================
+const OtpSixBoxInput = ({ value, onChange, onComplete, disabled }) => {
+  const inputRefs = useRef([]);
+
+  const handleChange = (index, char) => {
+    const clean = char.replace(/\D/g, '');
+    if (!clean) return;
+    
+    // Handle multi-character paste or fast typing
+    if (clean.length > 1) {
+      const full = clean.slice(0, 6);
+      onChange(full);
+      if (full.length === 6 && onComplete) onComplete(full);
+      const nextIdx = Math.min(full.length, 5);
+      inputRefs.current[nextIdx]?.focus();
+      return;
+    }
+
+    const valArr = (value || '').split('');
+    valArr[index] = clean;
+    const newOtp = valArr.join('').slice(0, 6);
+    onChange(newOtp);
+
+    if (newOtp.length === 6 && onComplete) {
+      onComplete(newOtp);
+    } else if (index < 5 && inputRefs.current[index + 1]) {
+      inputRefs.current[index + 1].focus();
+    }
+  };
+
+  const handleKeyDown = (index, e) => {
+    if (e.key === 'Backspace') {
+      if (!value[index]) {
+        if (index > 0 && inputRefs.current[index - 1]) {
+          inputRefs.current[index - 1].focus();
+        }
+      } else {
+        const valArr = (value || '').split('');
+        valArr[index] = '';
+        onChange(valArr.join(''));
+      }
+    } else if (e.key === 'ArrowLeft' && index > 0) {
+      inputRefs.current[index - 1].focus();
+    } else if (e.key === 'ArrowRight' && index < 5) {
+      inputRefs.current[index + 1].focus();
+    }
+  };
+
+  const handlePaste = (e) => {
+    e.preventDefault();
+    const pasted = e.clipboardData.getData('text').replace(/\D/g, '').slice(0, 6);
+    if (pasted) {
+      onChange(pasted);
+      if (pasted.length === 6 && onComplete) {
+        onComplete(pasted);
+      }
+      const nextIdx = Math.min(pasted.length, 5);
+      inputRefs.current[nextIdx]?.focus();
+    }
+  };
+
+  const handleClipboardPasteBtn = async () => {
+    try {
+      if (navigator.clipboard && navigator.clipboard.readText) {
+        const text = await navigator.clipboard.readText();
+        const clean = text.replace(/\D/g, '').slice(0, 6);
+        if (clean) {
+          onChange(clean);
+          if (clean.length === 6 && onComplete) {
+            onComplete(clean);
+          }
+          toast.success('Pasted code from clipboard!', { id: 'paste', duration: 2500 });
+        } else {
+          toast.error('No numeric code found on clipboard', { id: 'paste' });
+        }
+      }
+    } catch (err) {
+      toast.error('Clipboard access not granted. Please paste directly into the boxes.', { id: 'paste' });
+    }
+  };
+
+  return (
+    <div className="secure-otp-container">
+      <div className="otp-boxes-wrapper" onPaste={handlePaste}>
+        {[0, 1, 2, 3, 4, 5].map((idx) => (
+          <input
+            key={idx}
+            ref={(el) => (inputRefs.current[idx] = el)}
+            type="text"
+            inputMode="numeric"
+            pattern="[0-9]*"
+            autoComplete={idx === 0 ? "one-time-code" : "off"}
+            className={`otp-digit-box ${value && value[idx] ? 'filled' : ''}`}
+            value={value && value[idx] ? value[idx] : ''}
+            onChange={(e) => handleChange(idx, e.target.value)}
+            onKeyDown={(e) => handleKeyDown(idx, e)}
+            maxLength={6}
+            disabled={disabled}
+            autoFocus={idx === 0}
+          />
+        ))}
+      </div>
+      <div className="otp-helper-actions">
+        <button
+          type="button"
+          className="otp-clipboard-btn"
+          onClick={handleClipboardPasteBtn}
+          title="Paste 6-digit code copied from your email"
+        >
+          <FaClipboardCheck className="clipboard-icon" /> Paste from Clipboard
+        </button>
+      </div>
+    </div>
+  );
+};
 
 const COUNTRIES = [
   { code: '+91', label: 'India (+91)', flag: '🇮🇳', name: 'India' },
@@ -430,19 +550,14 @@ const Login = () => {
                 <form onSubmit={handleForgotVerifyOtp} className="login-form">
                   <div className="form-field-group">
                     <label className="field-label">6-Digit Reset Code</label>
-                    <div className="pill-input-wrapper">
-                      <FaKey className="field-prefix-icon" />
-                      <input
-                        type="text"
-                        className="pill-input otp-input"
-                        placeholder="123456"
-                        value={forgotOtp}
-                        onChange={(e) => setForgotOtp(e.target.value.replace(/\D/g, '').slice(0, 6))}
-                        maxLength={6}
-                        autoFocus
-                        required
-                      />
-                    </div>
+                    <OtpSixBoxInput 
+                      value={forgotOtp}
+                      onChange={setForgotOtp}
+                      onComplete={(fullCode) => {
+                        handleForgotVerifyOtp({ preventDefault: () => {} });
+                      }}
+                      disabled={isLoading}
+                    />
                   </div>
 
                   <button
@@ -580,19 +695,14 @@ const Login = () => {
             <form onSubmit={handleVerifyOtp} className="login-form">
               <div className="form-field-group">
                 <label className="field-label">6-Digit Verification Code</label>
-                <div className="pill-input-wrapper">
-                  <FaKey className="field-prefix-icon" />
-                  <input
-                    type="text"
-                    className="pill-input otp-input"
-                    placeholder="123456"
-                    value={otp}
-                    onChange={(e) => setOtp(e.target.value.replace(/\D/g, '').slice(0, 6))}
-                    maxLength={6}
-                    autoFocus
-                    required
-                  />
-                </div>
+                <OtpSixBoxInput 
+                  value={otp}
+                  onChange={setOtp}
+                  onComplete={(fullCode) => {
+                    handleVerifyOtp({ preventDefault: () => {} });
+                  }}
+                  disabled={isLoading}
+                />
               </div>
 
               <button
