@@ -1,0 +1,755 @@
+/* ============================================
+   PRESCRIPTION OCR & DOSAGE EXPLAINER STYLES
+   ============================================ */
+
+.prescription-view {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  max-width: 720px;
+  margin: 0 auto;
+}
+
+.rx-header-block {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.rx-title-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.75rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  color: #06b6d4;
+  background: rgba(6, 182, 212, 0.12);
+  padding: 4px 10px;
+  border-radius: 20px;
+  width: fit-content;
+  border: 1px solid rgba(6, 182, 212, 0.3);
+}
+
+.rx-title {
+  font-size: 1.6rem;
+  font-weight: 800;
+  color: var(--text-primary);
+  letter-spacing: -0.5px;
+  margin: 0;
+}
+
+.rx-subtitle {
+  font-size: 0.88rem;
+  color: var(--text-secondary);
+  line-height: 1.4;
+  margin: 0;
+}
+
+/* Scanner Card */
+.rx-scanner-card {
+  padding: 24px 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+.camera-rx-feed-wrap {
+  position: relative;
+  width: 100%;
+  max-width: 480px;
+  border-radius: 16px;
+  overflow: hidden;
+  border: 2px solid var(--accent-cyan);
+}
+
+.rx-video-preview {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+
+.rx-upload-area {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  width: 100%;
+}
+
+.rx-preview-container {
+  position: relative;
+  width: 100%;
+  max-height: 240px;
+  overflow: hidden;
+  border-radius: 14px;
+}
+
+.rx-preview-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* Scanner Laser Beam */
+.scanner-laser-beam {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 3px;
+  background: linear-gradient(90deg, transparent 0%, #06b6d4 50%, transparent 100%);
+  box-shadow: 0 0 12px 3px #06b6d4;
+  animation: rxLaserSweep 2s ease-in-out infinite alternate;
+  z-index: 10;
+}
+
+@keyframes rxLaserSweep {
+  0% { top: 5%; }
+  100% { top: 95%; }
+}
+
+.rx-placeholder-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+.rx-icon-box {
+  width: 64px;
+  height: 64px;
+  border-radius: 18px;
+  background: rgba(6, 182, 212, 0.12);
+  border: 1px solid rgba(6, 182, 212, 0.3);
+  color: #06b6d4;
+  font-size: 2rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 6px;
+}
+
+.rx-placeholder-content h3 {
+  font-size: 1.1rem;
+  font-weight: 800;
+  color: var(--text-primary);
+  margin: 0;
+}
+
+.rx-placeholder-content p {
+  font-size: 0.82rem;
+  color: var(--text-secondary);
+  max-width: 320px;
+  margin: 0;
+}
+
+.rx-btn-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+/* Progress & Live Timer Box */
+.ocr-progress-box {
+  width: 100%;
+  max-width: 480px;
+  margin-top: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  background: rgba(6, 182, 212, 0.04);
+  border: 1px solid rgba(6, 182, 212, 0.2);
+  border-radius: 14px;
+  padding: 14px 16px;
+  text-align: left;
+}
+
+.interactive-timer-box {
+  box-shadow: 0 4px 20px rgba(6, 182, 212, 0.15);
+  animation: rxGlowPulse 2.5s infinite alternate ease-in-out;
+}
+
+@keyframes rxGlowPulse {
+  0% { border-color: rgba(6, 182, 212, 0.2); }
+  100% { border-color: rgba(6, 182, 212, 0.5); }
+}
+
+.timer-status-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 0.82rem;
+}
+
+.timer-badge {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--text-primary);
+  font-weight: 600;
+}
+
+.timer-spin-icon {
+  color: #06b6d4;
+  animation: rxSpin 3s linear infinite;
+}
+
+@keyframes rxSpin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.est-badge {
+  font-size: 0.7rem;
+  background: rgba(6, 182, 212, 0.15);
+  color: #06b6d4;
+  padding: 2px 8px;
+  border-radius: 10px;
+  font-weight: 700;
+  border: 1px solid rgba(6, 182, 212, 0.3);
+}
+
+.ocr-status-pct {
+  font-weight: 800;
+  color: #06b6d4;
+}
+
+.ocr-progress-bar {
+  width: 100%;
+  height: 8px;
+  background: var(--bg-primary);
+  border-radius: 8px;
+  overflow: hidden;
+  border: 1px solid var(--border-color);
+}
+
+.ocr-progress-bar-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #06b6d4, #3b82f6, #8b5cf6);
+  border-radius: 8px;
+  transition: width 0.2s ease;
+}
+
+.animated-glow {
+  background-size: 200% 100%;
+  animation: rxProgressGlow 1.8s linear infinite;
+}
+
+@keyframes rxProgressGlow {
+  0% { background-position: 100% 0; }
+  100% { background-position: -100% 0; }
+}
+
+.ocr-stage-row {
+  display: flex;
+  align-items: center;
+  font-size: 0.78rem;
+  color: #06b6d4;
+  font-weight: 700;
+}
+
+.ocr-stage-text {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.microchip-pulse {
+  animation: rxPulseIcon 1.2s infinite ease-in-out;
+}
+
+@keyframes rxPulseIcon {
+  0%, 100% { transform: scale(1); opacity: 0.8; }
+  50% { transform: scale(1.2); opacity: 1; color: #10b981; }
+}
+
+.trivia-card-bubble {
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px dashed rgba(6, 182, 212, 0.35);
+  border-radius: 10px;
+  padding: 10px 14px;
+  margin-top: 4px;
+}
+
+.trivia-text-fade {
+  font-size: 0.78rem;
+  color: var(--text-secondary);
+  line-height: 1.45;
+  margin: 0;
+  font-style: italic;
+  animation: rxFadeInTrivia 0.4s ease;
+}
+
+@keyframes rxFadeInTrivia {
+  from { opacity: 0; transform: translateY(4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Doctor & Clinic Meta Card */
+.rx-meta-card {
+  padding: 14px 18px;
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.rx-meta-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.meta-icon {
+  font-size: 1.2rem;
+  color: #06b6d4;
+}
+
+.meta-label {
+  font-size: 0.7rem;
+  color: var(--text-tertiary);
+  display: block;
+}
+
+.meta-val {
+  font-size: 0.88rem;
+  color: var(--text-primary);
+}
+
+/* Drug Interaction Alert */
+.drug-interaction-banner {
+  padding: 14px 18px;
+  background: rgba(245, 158, 11, 0.08);
+  border: 1px solid rgba(245, 158, 11, 0.3);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.banner-title-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.alert-triangle-icon {
+  color: #f59e0b;
+  font-size: 1.1rem;
+}
+
+.banner-title-row h4 {
+  font-size: 0.9rem;
+  font-weight: 800;
+  color: #f59e0b;
+  margin: 0;
+}
+
+.interaction-list {
+  margin: 0;
+  padding-left: 20px;
+  font-size: 0.8rem;
+  color: var(--text-primary);
+  line-height: 1.5;
+}
+
+/* Empty Rx State */
+.empty-rx-state {
+  padding: 36px 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 8px;
+}
+
+.empty-pills-icon {
+  font-size: 2.2rem;
+  color: var(--text-tertiary);
+  margin-bottom: 6px;
+  opacity: 0.6;
+}
+
+.empty-rx-state h4 {
+  font-size: 1rem;
+  font-weight: 800;
+  color: var(--text-primary);
+  margin: 0;
+}
+
+.empty-rx-state p {
+  font-size: 0.82rem;
+  color: var(--text-secondary);
+  max-width: 340px;
+  margin: 0;
+}
+
+/* Medications List */
+.medications-section {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.meds-header-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.meds-title {
+  font-size: 1.15rem;
+  font-weight: 800;
+  color: var(--text-primary);
+  margin: 0;
+}
+
+.live-rx-tag {
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: #10b981;
+  background: rgba(16, 185, 129, 0.12);
+  padding: 3px 8px;
+  border-radius: 12px;
+  border: 1px solid rgba(16, 185, 129, 0.3);
+}
+
+.meds-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.med-card {
+  padding: 18px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.med-card-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid var(--border-color);
+  padding-bottom: 12px;
+}
+
+.med-title-group {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.med-icon-pill {
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  background: rgba(6, 182, 212, 0.15);
+  color: #06b6d4;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.2rem;
+}
+
+.med-name {
+  font-size: 1.05rem;
+  font-weight: 800;
+  color: var(--text-primary);
+  margin-bottom: 2px;
+}
+
+.med-dose {
+  font-size: 0.78rem;
+  color: var(--text-secondary);
+}
+
+.alarm-toggle-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--bg-primary);
+  border: 1px solid var(--border-color);
+  color: var(--text-secondary);
+  font-size: 0.78rem;
+  font-weight: 700;
+  padding: 6px 14px;
+  border-radius: 20px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.alarm-toggle-btn.alarm-on {
+  background: rgba(16, 185, 129, 0.15);
+  border-color: #10b981;
+  color: #10b981;
+  box-shadow: 0 0 10px rgba(16, 185, 129, 0.3);
+}
+
+.med-card-body {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.med-detail-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 8px 16px;
+}
+
+.med-detail-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.85rem;
+}
+
+.detail-lbl {
+  color: var(--text-tertiary);
+  font-weight: 600;
+  min-width: 90px;
+}
+
+.detail-val {
+  color: var(--text-primary);
+  font-weight: 500;
+}
+
+.highlight-cyan {
+  color: #06b6d4;
+  font-weight: 700;
+}
+
+.highlight-green {
+  color: #10b981;
+  font-weight: 700;
+}
+
+.med-precaution-box {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(245, 158, 11, 0.1);
+  border: 1px solid rgba(245, 158, 11, 0.25);
+  padding: 8px 12px;
+  border-radius: 8px;
+  font-size: 0.8rem;
+  color: #f59e0b;
+  margin-top: 4px;
+}
+
+.warn-icon {
+  font-size: 0.9rem;
+  flex-shrink: 0;
+}
+
+/* AI Pharmacology Breakdown */
+.rx-ai-analysis-card {
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.rx-ai-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.rx-ai-header h3 {
+  font-size: 1.1rem;
+  font-weight: 800;
+  color: var(--text-primary);
+  margin: 0;
+}
+
+.shield-icon {
+  color: #06b6d4;
+  font-size: 1.2rem;
+}
+
+.rx-ai-body {
+  background: var(--bg-primary);
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  padding: 16px;
+}
+
+.dosage-explainer-text {
+  font-size: 0.88rem;
+  line-height: 1.6;
+  color: var(--text-primary);
+  white-space: pre-wrap;
+}
+
+/* ========================================================
+   MULTILINGUAL LANGUAGE SELECTOR & VOICE READOUT BAR (Rx)
+   ======================================================== */
+.rx-ai-header-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.rx-ai-header-left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.rx-ai-header-left h3 {
+  font-size: 1.1rem;
+  font-weight: 800;
+  color: var(--text-primary);
+  margin: 0;
+}
+
+.language-selector-pills {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(255, 255, 255, 0.04);
+  padding: 4px;
+  border-radius: 20px;
+  border: 1px solid var(--border-color);
+}
+
+.lang-pill {
+  background: transparent;
+  border: none;
+  color: var(--text-secondary);
+  font-size: 0.76rem;
+  font-weight: 700;
+  padding: 5px 12px;
+  border-radius: 16px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.lang-pill:hover:not(:disabled) {
+  color: var(--text-primary);
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.lang-pill.active {
+  background: linear-gradient(135deg, #06b6d4, #3b82f6);
+  color: #ffffff;
+  box-shadow: 0 2px 10px rgba(6, 182, 212, 0.3);
+}
+
+/* Voice Readout Player Bar */
+.voice-readout-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+  background: rgba(6, 182, 212, 0.05);
+  border: 1px solid rgba(6, 182, 212, 0.2);
+  border-radius: 12px;
+  padding: 10px 14px;
+  margin-top: 10px;
+}
+
+.voice-controls-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.voice-play-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: linear-gradient(135deg, #06b6d4, #0891b2);
+  color: #ffffff;
+  border: none;
+  font-size: 0.82rem;
+  font-weight: 700;
+  padding: 8px 16px;
+  border-radius: 20px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 10px rgba(6, 182, 212, 0.3);
+}
+
+.voice-play-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 14px rgba(6, 182, 212, 0.45);
+}
+
+.voice-play-btn.is-speaking {
+  background: linear-gradient(135deg, #f59e0b, #d97706);
+  box-shadow: 0 2px 10px rgba(245, 158, 11, 0.4);
+}
+
+.voice-stop-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(239, 68, 68, 0.15);
+  border: 1px solid rgba(239, 68, 68, 0.4);
+  color: #ef4444;
+  font-size: 0.78rem;
+  font-weight: 700;
+  padding: 7px 14px;
+  border-radius: 20px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.voice-stop-btn:hover {
+  background: rgba(239, 68, 68, 0.25);
+}
+
+/* Audio Waveform Animation */
+.speaking-wave-box {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.wave-bar {
+  display: inline-block;
+  width: 3px;
+  height: 14px;
+  background: #06b6d4;
+  border-radius: 3px;
+  animation: rxAudioWave 1.2s infinite ease-in-out;
+}
+
+.bar-1 { animation-delay: 0.0s; }
+.bar-2 { animation-delay: 0.2s; }
+.bar-3 { animation-delay: 0.4s; }
+.bar-4 { animation-delay: 0.6s; }
+.bar-5 { animation-delay: 0.8s; }
+
+@keyframes rxAudioWave {
+  0%, 100% { height: 6px; opacity: 0.4; }
+  50% { height: 18px; opacity: 1; }
+}
+
+.speaking-label {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #06b6d4;
+  margin-left: 6px;
+}
+
+.translating-indicator {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #06b6d4;
+  font-size: 0.84rem;
+  font-weight: 600;
+  padding: 16px;
+}

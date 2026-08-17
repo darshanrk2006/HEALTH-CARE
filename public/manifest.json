@@ -1,0 +1,20 @@
+{
+  "name": "TitanVitals nxt Gen AI - Smart Health Management",
+  "short_name": "TitanVitals",
+  "description": "AI-powered clinical vital telemetry and smart health management",
+  "start_url": "/",
+  "id": "/",
+  "display": "standalone",
+  "background_color": "#0a0a1a",
+  "theme_color": "#00d4ff",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/vite.svg",
+      "sizes": "192x192 512x512",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["health", "medical", "wellness", "lifestyle"]
+}

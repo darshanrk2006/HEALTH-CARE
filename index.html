@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+    <title>TitanVitals nxt Gen AI - Smart Health Management</title>
+    
+    <!-- PWA & Mobile Web App Meta Tags -->
+    <link rel="manifest" href="/manifest.json" />
+    <meta name="theme-color" content="#00d4ff" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="TitanVitals" />
+    <link rel="apple-touch-icon" href="/vite.svg" />
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+    
+    <style>
+        /* Reset */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            min-height: 100vh;
+            background: #0a0a1a;
+            color: #ffffff;
+        }
+        
+        #root {
+            min-height: 100vh;
+        }
+        
+        /* Loading Screen */
+        .loading-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: #0a0a1a;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+            transition: opacity 0.5s ease;
+        }
+        
+        .loading-screen.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+        
+        .loading-spinner {
+            width: 60px;
+            height: 60px;
+            border: 3px solid rgba(0, 212, 255, 0.1);
+            border-top: 3px solid #00d4ff;
+            border-right: 3px solid #7c3aed;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .loading-text {
+            margin-top: 24px;
+            color: #8088a0;
+            font-size: 14px;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+        }
+        
+        .loading-progress {
+            margin-top: 16px;
+            width: 200px;
+            height: 2px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 2px;
+            overflow: hidden;
+        }
+        
+        .loading-progress-bar {
+            height: 100%;
+            width: 0%;
+            background: linear-gradient(90deg, #00d4ff, #7c3aed);
+            border-radius: 2px;
+            animation: progress 2s ease-in-out infinite;
+        }
+        
+        @keyframes progress {
+            0% { width: 0%; }
+            50% { width: 70%; }
+            100% { width: 100%; }
+        }
+
+        .server-notice-card {
+            display: none;
+            margin-top: 20px;
+            background: rgba(255, 255, 255, 0.06);
+            border: 1px solid rgba(0, 212, 255, 0.3);
+            border-radius: 16px;
+            padding: 20px 24px;
+            max-width: 440px;
+            text-align: center;
+        }
+
+        .server-notice-card.visible {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .server-notice-btn {
+            background: linear-gradient(135deg, #00d4ff, #7c3aed);
+            color: #ffffff;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 10px;
+            font-weight: 700;
+            font-size: 14px;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-block;
+        }
+    </style>
+</head>
+<body>
+    <!-- Live Server Auto-Redirect & Notice -->
+    <script>
+        // If opened through Live Server (port 5500 or not Vite dev port), auto redirect to port 3000
+        if (window.location.port === '5500' || window.location.port === '5501') {
+            console.warn('Live Server detected. Redirecting to Vite dev server on http://localhost:3000...');
+            window.location.href = 'http://localhost:3000' + window.location.pathname + window.location.search;
+        }
+    </script>
+
+    <!-- Loading Screen -->
+    <div id="loading-screen" class="loading-screen">
+        <div class="loading-spinner"></div>
+        <div class="loading-text">Loading TitanVitals nxt Gen AI...</div>
+        <div class="loading-progress">
+            <div class="loading-progress-bar"></div>
+        </div>
+
+        <div id="server-notice" class="server-notice-card">
+            <p style="font-size: 13px; color: #a0aec0;">
+                To run TitanVitals React Portal, please open:
+            </p>
+            <a href="http://localhost:3000" class="server-notice-btn">
+                Open http://localhost:3000
+            </a>
+        </div>
+    </div>
+
+    <!-- Root -->
+    <div id="root"></div>
+
+    <!-- Main Script -->
+    <script type="module" src="/src/main.jsx"></script>
+
+    <!-- Hide Loading Screen -->
+    <script>
+        function hideLoading() {
+            const loading = document.getElementById('loading-screen');
+            if (loading) {
+                loading.classList.add('hidden');
+                setTimeout(() => {
+                    loading.style.display = 'none';
+                }, 400);
+            }
+        }
+
+        // Hide when DOM is ready or window loaded
+        document.addEventListener('DOMContentLoaded', function() {
+            setTimeout(hideLoading, 300);
+        });
+        window.addEventListener('load', function() {
+            setTimeout(hideLoading, 200);
+        });
+
+        // Check if React rendered
+        const observer = new MutationObserver(function(mutations) {
+            const root = document.getElementById('root');
+            if (root && root.children.length > 0) {
+                hideLoading();
+                observer.disconnect();
+            }
+        });
+
+        const rootElement = document.getElementById('root');
+        if (rootElement) {
+            observer.observe(rootElement, { 
+                childList: true, 
+                subtree: true 
+            });
+        }
+
+        // Guaranteed fallback: hide loader after 1 second max
+        setTimeout(hideLoading, 1000);
+    </script>
+</body>
+</html>

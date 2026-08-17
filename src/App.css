@@ -1,0 +1,71 @@
+/* ============================================
+   APP - Main Styles
+   ============================================ */
+
+.app-container {
+  min-height: 100vh;
+  background: var(--bg-primary);
+  transition: background var(--transition-normal);
+}
+
+/* Theme Toggle Button */
+.theme-toggle {
+  position: fixed !important;
+  top: var(--space-lg) !important;
+  right: var(--space-lg) !important;
+  z-index: 1000 !important;
+  width: 48px !important;
+  height: 48px !important;
+  border-radius: var(--radius-full) !important;
+  background: var(--bg-glass) !important;
+  backdrop-filter: blur(10px) !important;
+  border: 1px solid var(--border-color) !important;
+  color: var(--text-primary) !important;
+  font-size: 1.4rem !important;
+  cursor: pointer !important;
+  transition: all var(--transition-bounce) !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  box-shadow: 0 4px 20px var(--shadow-color) !important;
+}
+
+.theme-toggle:hover {
+  transform: rotate(180deg) scale(1.1);
+  border-color: var(--border-glow);
+  box-shadow: 0 8px 40px var(--shadow-glow), var(--primary-glow);
+}
+
+/* Toast Notifications */
+.Toastify__toast {
+  background: var(--bg-card) !important;
+  color: var(--text-primary) !important;
+  border: 1px solid var(--border-color) !important;
+  border-radius: var(--radius-lg) !important;
+  backdrop-filter: blur(10px) !important;
+  box-shadow: 0 8px 32px var(--shadow-color) !important;
+}
+
+.Toastify__toast-body {
+  font-family: var(--font-family) !important;
+}
+
+.Toastify__progress-bar {
+  background: var(--primary-gradient) !important;
+}
+
+/* Page Transitions */
+.page-enter {
+  animation: fadeInUp 0.4s ease forwards;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .theme-toggle {
+    top: var(--space-md) !important;
+    right: var(--space-md) !important;
+    width: 40px !important;
+    height: 40px !important;
+    font-size: 1.2rem !important;
+  }
+}

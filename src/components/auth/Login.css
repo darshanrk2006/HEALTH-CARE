@@ -1,0 +1,1087 @@
+/* ============================================
+   FUTURISTIC LOGIN PAGE & OTP VERIFICATION
+   TITANVITALS NXT GEN AI - BOLD & SPACIOUS
+   ============================================ */
+
+.login-page-container {
+  min-height: 100vh;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 20px;
+  box-sizing: border-box;
+  position: relative;
+  background: var(--bg-primary, #0a0a1a);
+  color: var(--text-primary, #ffffff);
+  overflow: visible !important;
+  transition: background 0.3s ease, color 0.3s ease;
+}
+
+/* Ambient glowing background orbs */
+.login-bg-glow {
+  position: absolute;
+  width: 480px;
+  height: 480px;
+  border-radius: 50%;
+  filter: blur(140px);
+  pointer-events: none;
+  z-index: 0;
+  opacity: 0.35;
+  animation: float-glow 8s ease-in-out infinite alternate;
+}
+
+.glow-cyan {
+  top: -80px;
+  left: 15%;
+  background: radial-gradient(circle, #00d4ff 0%, rgba(0, 212, 255, 0) 70%);
+}
+
+.glow-purple {
+  bottom: -80px;
+  right: 15%;
+  background: radial-gradient(circle, #7c3aed 0%, rgba(124, 58, 237, 0) 70%);
+}
+
+@keyframes float-glow {
+  0% { transform: translateY(0) scale(0.9); }
+  100% { transform: translateY(30px) scale(1.1); }
+}
+
+/* Top Floating Bar with Theme Switcher & DB Status */
+.login-top-bar {
+  position: absolute;
+  top: 20px;
+  left: 24px;
+  right: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  z-index: 10;
+}
+
+.db-live-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(0, 212, 255, 0.08);
+  border: 1px solid rgba(0, 212, 255, 0.3);
+  color: var(--text-secondary);
+  font-size: 0.8rem;
+  font-weight: 600;
+  padding: 7px 16px;
+  border-radius: 20px;
+}
+
+.db-live-badge strong {
+  color: var(--accent-cyan);
+}
+
+.db-icon {
+  font-size: 0.9rem;
+  color: var(--accent-cyan);
+}
+
+.login-top-right-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+/* Glowing Top Admin Portal Button */
+.login-admin-portal-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: linear-gradient(135deg, rgba(244, 63, 94, 0.2), rgba(124, 58, 237, 0.25));
+  border: 1px solid rgba(244, 63, 94, 0.45);
+  color: #fda4af;
+  font-size: 0.82rem;
+  font-weight: 800;
+  padding: 8px 16px;
+  border-radius: 20px;
+  cursor: pointer;
+  box-shadow: 0 0 16px rgba(244, 63, 94, 0.25);
+  transition: all 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+  backdrop-filter: blur(10px);
+}
+
+.login-admin-portal-btn .admin-btn-icon {
+  color: #f43f5e;
+  font-size: 0.95rem;
+}
+
+.login-admin-portal-btn:hover {
+  background: linear-gradient(135deg, #f43f5e, #7c3aed);
+  color: #ffffff;
+  border-color: #f43f5e;
+  transform: translateY(-2px) scale(1.04);
+  box-shadow: 0 0 24px rgba(244, 63, 94, 0.7);
+}
+
+.login-admin-portal-btn:hover .admin-btn-icon {
+  color: #ffffff;
+}
+
+/* Theme Toggle Button */
+.login-theme-toggle-btn {
+  width: 44px !important;
+  height: 44px !important;
+  min-width: 44px !important;
+  min-height: 44px !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  flex-shrink: 0 !important;
+  border-radius: 50% !important;
+  background: var(--bg-card, rgba(26, 26, 46, 0.8)) !important;
+  border: 1px solid var(--border-color, rgba(255, 255, 255, 0.15)) !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  cursor: pointer !important;
+  box-shadow: 0 4px 16px var(--shadow-color) !important;
+  transition: all 0.25s cubic-bezier(0.34, 1.56, 0.64, 1) !important;
+}
+
+.login-theme-toggle-btn:hover {
+  transform: scale(1.1) rotate(15deg);
+  border-color: var(--accent-cyan) !important;
+  box-shadow: 0 0 16px rgba(0, 212, 255, 0.4) !important;
+}
+
+.theme-icon {
+  font-size: 1.25rem !important;
+  display: block !important;
+  pointer-events: none;
+}
+
+.moon-icon {
+  color: #00d4ff !important;
+  filter: drop-shadow(0 0 6px rgba(0, 212, 255, 0.6));
+}
+
+.sun-icon {
+  color: #f59e0b !important;
+  filter: drop-shadow(0 0 6px rgba(245, 158, 11, 0.6));
+}
+
+/* Main Login Card - Bold, Bigger & Spacious */
+.login-card {
+  width: 100%;
+  max-width: 480px;
+  padding: 38px 36px;
+  margin: auto;
+  box-sizing: border-box;
+  background: var(--bg-card, rgba(26, 26, 46, 0.85));
+  backdrop-filter: blur(28px);
+  -webkit-backdrop-filter: blur(28px);
+  border: 1px solid var(--border-color, rgba(255, 255, 255, 0.12));
+  border-radius: 28px;
+  box-shadow: 0 20px 60px var(--shadow-color);
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  z-index: 1;
+  animation: card-appear 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+  transition: background 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+/* Optimized Signup Card to fit all viewports seamlessly without overflowing */
+.login-card.signup-card {
+  padding: 24px 30px;
+  max-width: 460px;
+}
+
+.login-card.signup-card .login-brand-header {
+  margin-bottom: 8px;
+}
+
+.login-card.signup-card .shield-icon-wrapper {
+  width: 34px;
+  height: 34px;
+}
+
+.login-card.signup-card .shield-brand-icon {
+  font-size: 1.2rem;
+}
+
+.login-card.signup-card .brand-title-text {
+  font-size: 1.45rem;
+}
+
+.login-card.signup-card .login-subheading-group {
+  margin-bottom: 12px;
+}
+
+.login-card.signup-card .welcome-heading {
+  font-size: 1.25rem;
+  margin-bottom: 3px;
+}
+
+.login-card.signup-card .welcome-caption {
+  font-size: 0.82rem;
+}
+
+.login-card.signup-card .login-form {
+  gap: 8px;
+}
+
+.login-card.signup-card .form-field-group {
+  gap: 3px;
+}
+
+.login-card.signup-card .field-label {
+  font-size: 0.74rem;
+}
+
+.login-card.signup-card .pill-input,
+.login-card.signup-card .country-select {
+  height: 40px;
+  font-size: 0.88rem;
+}
+
+.login-card.signup-card .bg-chip {
+  padding: 3px 8px !important;
+  font-size: 0.72rem;
+}
+
+.login-card.signup-card .primary-login-btn {
+  height: 42px;
+  font-size: 0.92rem;
+  margin-top: 2px;
+}
+
+.login-card.signup-card .login-divider-row {
+  margin: 10px 0 8px;
+}
+
+.login-card.signup-card .social-auth-btn {
+  height: 38px;
+  font-size: 0.86rem;
+}
+
+.login-card.signup-card .login-footer-row {
+  margin-top: 10px;
+  font-size: 0.84rem;
+}
+
+@keyframes card-appear {
+  from {
+    opacity: 0;
+    transform: translateY(16px) scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* Brand Header */
+.login-brand-header {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+.shield-icon-wrapper {
+  position: relative;
+  width: 42px;
+  height: 42px;
+  border-radius: 12px;
+  background: rgba(0, 212, 255, 0.15);
+  border: 1px solid rgba(0, 212, 255, 0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 0 18px rgba(0, 212, 255, 0.4);
+}
+
+.shield-brand-icon {
+  font-size: 1.45rem;
+  color: #00d4ff;
+  filter: drop-shadow(0 0 8px #00d4ff);
+}
+
+.shield-inner-dot {
+  position: absolute;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #ffffff;
+  box-shadow: 0 0 6px #ffffff;
+}
+
+.brand-text-block {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.brand-title-text {
+  font-size: 1.75rem;
+  font-weight: 800;
+  letter-spacing: -0.5px;
+  color: var(--text-primary);
+  line-height: 1;
+  background: linear-gradient(135deg, #00d4ff, #7c3aed);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.nxt-gen-pill {
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.8px;
+  text-transform: uppercase;
+  color: #00d4ff;
+  background: rgba(0, 212, 255, 0.12);
+  border: 1px solid rgba(0, 212, 255, 0.35);
+  padding: 3px 9px;
+  border-radius: 12px;
+}
+
+/* Subheadings */
+.login-subheading-group {
+  text-align: center;
+  margin-bottom: 22px;
+}
+
+.welcome-heading {
+  font-size: 1.45rem;
+  font-weight: 800;
+  color: var(--text-primary);
+  letter-spacing: -0.3px;
+  margin-bottom: 5px;
+}
+
+.welcome-caption {
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+  line-height: 1.4;
+}
+
+.text-cyan {
+  color: var(--accent-cyan);
+}
+
+/* Form Styles - Spacious and Clear */
+.login-form {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.form-field-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.field-label {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 2px;
+}
+
+.field-label-icon {
+  font-size: 0.82rem;
+  display: inline-flex;
+  align-items: center;
+}
+
+.field-label-text {
+  display: inline-block;
+}
+
+/* Gradient accents matching the exact TitanVitals brand spectrum */
+.label-email-text,
+.label-name-text,
+.label-phone-text {
+  background: linear-gradient(135deg, #00d4ff 0%, #38bdf8 55%, #60a5fa 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  font-weight: 800;
+  letter-spacing: 0.6px;
+}
+
+.label-password-text {
+  background: linear-gradient(135deg, #60a5fa 0%, #8b5cf6 55%, #a855f7 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  font-weight: 800;
+  letter-spacing: 0.6px;
+}
+
+/* Icon glow colors */
+.icon-cyan {
+  color: #00d4ff !important;
+  filter: drop-shadow(0 0 6px rgba(0, 212, 255, 0.4));
+}
+
+.icon-purple {
+  color: #a855f7 !important;
+  filter: drop-shadow(0 0 6px rgba(168, 85, 247, 0.45));
+}
+
+.pill-input-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+  width: 100%;
+}
+
+.pill-input-wrapper.flex-1 {
+  flex: 1;
+}
+
+/* Phone Input Combo with Country Flag Selector */
+.phone-input-combo {
+  display: flex;
+  gap: 8px;
+  width: 100%;
+}
+
+.country-select-wrapper {
+  position: relative;
+  width: 130px;
+  min-width: 130px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+}
+
+.country-select {
+  width: 100%;
+  height: 48px;
+  padding: 0 24px 0 12px;
+  border-radius: 24px;
+  background: var(--bg-input, rgba(255, 255, 255, 0.05));
+  border: 1px solid var(--border-color);
+  color: var(--text-primary);
+  font-size: 0.88rem;
+  font-weight: 600;
+  outline: none;
+  cursor: pointer;
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  transition: all 0.2s ease;
+}
+
+.country-select option {
+  background: #1a1a2e;
+  color: #ffffff;
+  padding: 8px;
+}
+
+[data-theme="light"] .country-select option {
+  background: #ffffff;
+  color: #0f172a;
+}
+
+.country-select:focus {
+  border-color: var(--accent-cyan);
+  box-shadow: 0 0 16px rgba(0, 212, 255, 0.2);
+}
+
+.select-arrow {
+  position: absolute;
+  right: 12px;
+  color: var(--text-tertiary);
+  font-size: 0.75rem;
+  pointer-events: none;
+}
+
+.phone-input-field {
+  width: 100%;
+}
+
+.field-prefix-icon {
+  position: absolute;
+  left: 16px;
+  color: var(--accent-cyan);
+  font-size: 0.95rem;
+  pointer-events: none;
+  z-index: 2;
+  transition: all 0.2s ease;
+}
+
+.pill-input {
+  width: 100%;
+  height: 48px;
+  padding: 0 18px;
+  border-radius: 24px;
+  background: var(--bg-input, rgba(255, 255, 255, 0.05));
+  border: 1px solid var(--border-color);
+  color: var(--text-primary);
+  font-size: 0.95rem;
+  font-family: inherit;
+  outline: none;
+  transition: all 0.2s ease;
+}
+
+.pill-input.has-prefix-icon {
+  padding-left: 44px !important;
+}
+
+.pill-input:focus {
+  border-color: var(--accent-cyan);
+  background: var(--bg-input-focus, rgba(0, 212, 255, 0.05));
+  box-shadow: 0 0 16px rgba(0, 212, 255, 0.25);
+}
+
+/* Email Input Theme (TitanVitals Cyan Tone) */
+.input-email {
+  border-color: rgba(0, 212, 255, 0.25);
+}
+
+.input-email:hover {
+  border-color: rgba(0, 212, 255, 0.5);
+  background: rgba(0, 212, 255, 0.03);
+}
+
+.input-email:focus {
+  border-color: #00d4ff !important;
+  background: rgba(0, 212, 255, 0.06) !important;
+  box-shadow: 0 0 0 1px rgba(0, 212, 255, 0.4), 0 0 20px rgba(0, 212, 255, 0.25) !important;
+}
+
+/* Password Input Theme (TitanVitals Purple Tone) */
+.input-password {
+  border-color: rgba(168, 85, 247, 0.28);
+}
+
+.input-password:hover {
+  border-color: rgba(168, 85, 247, 0.55);
+  background: rgba(168, 85, 247, 0.03);
+}
+
+.input-password:focus {
+  border-color: #a855f7 !important;
+  background: rgba(168, 85, 247, 0.06) !important;
+  box-shadow: 0 0 0 1px rgba(168, 85, 247, 0.45), 0 0 20px rgba(168, 85, 247, 0.3) !important;
+}
+
+/* Patient Name Input */
+.input-name {
+  border-color: rgba(0, 212, 255, 0.25);
+}
+
+.input-name:focus {
+  border-color: #00d4ff !important;
+  box-shadow: 0 0 0 1px rgba(0, 212, 255, 0.4), 0 0 20px rgba(0, 212, 255, 0.25) !important;
+}
+
+.otp-input {
+  padding-left: 42px;
+  font-size: 1.35rem;
+  font-weight: 700;
+  letter-spacing: 6px;
+  text-align: center;
+  font-family: monospace;
+}
+
+.password-input {
+  padding-right: 46px !important;
+}
+
+.password-toggle-btn {
+  position: absolute !important;
+  right: 12px !important;
+  top: 50% !important;
+  transform: translateY(-50%) !important;
+  width: 32px !important;
+  height: 32px !important;
+  min-width: 32px !important;
+  min-height: 32px !important;
+  max-width: 32px !important;
+  max-height: 32px !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  background: transparent !important;
+  border: none !important;
+  border-radius: 50% !important;
+  box-shadow: none !important;
+  color: var(--text-secondary, #94a3b8) !important;
+  cursor: pointer !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  z-index: 4 !important;
+  outline: none !important;
+  transition: all 0.2s ease !important;
+}
+
+.password-toggle-btn svg {
+  font-size: 1.1rem !important;
+  width: 1.1rem !important;
+  height: 1.1rem !important;
+  display: block !important;
+  pointer-events: none !important;
+  transition: transform 0.2s ease, color 0.2s ease !important;
+}
+
+.password-toggle-btn:hover {
+  transform: translateY(-50%) scale(1.15) !important;
+  color: var(--accent-cyan, #00d4ff) !important;
+  background: rgba(0, 212, 255, 0.1) !important;
+  box-shadow: none !important;
+}
+
+.password-toggle-btn:active {
+  transform: translateY(-50%) scale(0.95) !important;
+}
+
+[data-theme="light"] .password-toggle-btn {
+  color: #64748b !important;
+  background: transparent !important;
+}
+
+[data-theme="light"] .password-toggle-btn:hover {
+  color: #0284c7 !important;
+  background: rgba(2, 132, 199, 0.12) !important;
+}
+
+/* Blood Group Chips */
+.blood-group-chips {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.bg-chip {
+  padding: 5px 11px !important;
+  border-radius: 12px !important;
+  font-size: 0.78rem;
+  font-weight: 700;
+  background: var(--bg-primary);
+  border: 1px solid var(--border-color);
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.bg-chip:hover {
+  border-color: var(--accent-cyan);
+  color: var(--accent-cyan);
+}
+
+.bg-chip.active {
+  background: var(--accent-cyan) !important;
+  color: #0a0a1a !important;
+  border-color: var(--accent-cyan) !important;
+  box-shadow: 0 0 10px rgba(0, 212, 255, 0.4);
+}
+
+/* Forgot password */
+.forgot-password-row {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: -4px;
+}
+
+.forgot-password-link {
+  background: transparent !important;
+  border: none !important;
+  color: var(--accent-cyan);
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 0 !important;
+  transition: opacity 0.2s ease;
+}
+
+.forgot-password-link:hover {
+  text-decoration: underline;
+  opacity: 0.85;
+}
+
+/* Primary Button */
+.primary-login-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  width: 100%;
+  height: 50px;
+  border-radius: 25px;
+  background: linear-gradient(135deg, #00d4ff 0%, #0099ff 50%, #7c3aed 100%);
+  color: #ffffff;
+  font-size: 1rem;
+  font-weight: 700;
+  letter-spacing: 0.3px;
+  border: none;
+  cursor: pointer;
+  box-shadow: 0 6px 20px rgba(0, 212, 255, 0.35);
+  transition: all 0.25s ease;
+  margin-top: 4px;
+}
+
+.primary-login-btn:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 28px rgba(0, 212, 255, 0.55);
+}
+
+.primary-login-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.login-arrow-icon {
+  font-size: 0.95rem;
+}
+
+/* Divider: -- OR -- */
+.login-divider-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 16px 0 12px;
+}
+
+.divider-line {
+  flex: 1;
+  height: 1px;
+  background: var(--border-color);
+}
+
+.divider-text {
+  font-size: 0.76rem;
+  font-weight: 700;
+  color: var(--text-tertiary);
+  letter-spacing: 1px;
+}
+
+/* Social Auth Actions */
+.social-auth-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: 100%;
+}
+
+.social-auth-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  width: 100%;
+  height: 46px;
+  padding: 0 18px !important;
+  border-radius: 23px;
+  background: var(--bg-primary);
+  border: 1px solid var(--border-color);
+  color: var(--text-primary);
+  font-size: 0.92rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.social-auth-btn:hover:not(:disabled) {
+  background: var(--bg-hover, rgba(255, 255, 255, 0.08));
+  border-color: var(--accent-cyan);
+  transform: translateY(-1px);
+}
+
+/* Google Icon STRICT sizing */
+.google-svg-icon {
+  width: 18px !important;
+  height: 18px !important;
+  min-width: 18px !important;
+  min-height: 18px !important;
+  max-width: 18px !important;
+  max-height: 18px !important;
+  flex-shrink: 0 !important;
+  display: inline-block !important;
+}
+
+/* OTP Resend Row */
+.otp-resend-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: 10px;
+}
+
+.resend-timer-text {
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+}
+
+.resend-timer-text strong {
+  color: var(--accent-cyan);
+}
+
+.resend-code-btn {
+  background: transparent !important;
+  border: none !important;
+  color: var(--accent-cyan);
+  font-size: 0.85rem;
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  padding: 4px 8px !important;
+}
+
+.resend-code-btn:hover {
+  text-decoration: underline;
+}
+
+.back-to-signup-btn {
+  background: transparent !important;
+  border: none !important;
+  color: var(--text-secondary);
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+  margin-top: 12px;
+  text-align: center;
+  padding: 0 !important;
+}
+
+.back-to-signup-btn:hover {
+  color: var(--text-primary);
+}
+
+/* Animated signup extra fields */
+.signup-extra-fields {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  animation: authSlideDown 0.28s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes authSlideDown {
+  0% {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Footer Mode Switcher with Smooth Pill Button */
+.login-footer-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 18px;
+  font-size: 0.88rem;
+}
+
+.footer-prompt-text {
+  color: var(--text-secondary);
+}
+
+.toggle-auth-mode-btn {
+  background: rgba(0, 212, 255, 0.08) !important;
+  border: 1px solid rgba(0, 212, 255, 0.3) !important;
+  color: var(--accent-cyan) !important;
+  font-weight: 700;
+  cursor: pointer;
+  padding: 4px 14px !important;
+  font-size: 0.88rem;
+  border-radius: 16px;
+  transition: all 0.22s cubic-bezier(0.34, 1.56, 0.64, 1) !important;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.toggle-auth-mode-btn:hover {
+  background: var(--accent-cyan) !important;
+  color: #0a0a1a !important;
+  box-shadow: 0 0 14px rgba(0, 212, 255, 0.45);
+  transform: translateY(-1px);
+  text-decoration: none !important;
+}
+
+.toggle-auth-mode-btn:active {
+  transform: scale(0.95);
+}
+
+[data-theme="light"] .toggle-auth-mode-btn {
+  background: rgba(2, 132, 199, 0.08) !important;
+  border: 1px solid rgba(2, 132, 199, 0.3) !important;
+  color: #0284c7 !important;
+}
+
+[data-theme="light"] .toggle-auth-mode-btn:hover {
+  background: #0284c7 !important;
+  color: #ffffff !important;
+  box-shadow: 0 4px 14px rgba(2, 132, 199, 0.3);
+}
+
+/* ============================================
+   LIGHT MODE SPECIFIC OVERRIDES FOR LOGIN
+   ============================================ */
+[data-theme="light"] .login-page-container {
+  background: #f8fafc;
+  color: #0f172a;
+}
+
+[data-theme="light"] .login-card {
+  background: rgba(255, 255, 255, 0.92);
+  border: 1px solid rgba(226, 232, 240, 0.9);
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.08);
+}
+
+[data-theme="light"] .pill-input,
+[data-theme="light"] .country-select {
+  background: #ffffff;
+  border: 1px solid #cbd5e1;
+  color: #0f172a;
+}
+
+[data-theme="light"] .pill-input:focus,
+[data-theme="light"] .country-select:focus {
+  background: #ffffff;
+  border-color: #0284c7;
+  box-shadow: 0 0 0 3px rgba(2, 132, 199, 0.15);
+}
+
+[data-theme="light"] .input-email:focus {
+  border-color: #0284c7 !important;
+  box-shadow: 0 0 0 3px rgba(2, 132, 199, 0.18), 0 0 16px rgba(2, 132, 199, 0.15) !important;
+}
+
+[data-theme="light"] .input-password:focus {
+  border-color: #7c3aed !important;
+  box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.18), 0 0 16px rgba(124, 58, 237, 0.15) !important;
+}
+
+[data-theme="light"] .label-email-text,
+[data-theme="light"] .label-name-text,
+[data-theme="light"] .label-phone-text {
+  background: linear-gradient(135deg, #0284c7 0%, #2563eb 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+[data-theme="light"] .label-password-text {
+  background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+[data-theme="light"] .icon-cyan {
+  color: #0284c7 !important;
+  filter: drop-shadow(0 0 4px rgba(2, 132, 199, 0.3));
+}
+
+[data-theme="light"] .icon-purple {
+  color: #7c3aed !important;
+  filter: drop-shadow(0 0 4px rgba(124, 58, 237, 0.3));
+}
+
+[data-theme="light"] .welcome-heading {
+  color: #0f172a;
+}
+
+[data-theme="light"] .field-label {
+  color: #475569;
+}
+
+[data-theme="light"] .welcome-caption,
+[data-theme="light"] .footer-prompt-text {
+  color: #64748b;
+}
+
+[data-theme="light"] .social-auth-btn {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  color: #1e293b;
+}
+
+[data-theme="light"] .social-auth-btn:hover:not(:disabled) {
+  background: #f1f5f9;
+  border-color: #0284c7;
+}
+
+[data-theme="light"] .db-live-badge {
+  background: rgba(2, 132, 199, 0.08);
+  border-color: rgba(2, 132, 199, 0.3);
+  color: #475569;
+}
+
+[data-theme="light"] .login-theme-toggle-btn {
+  background: #ffffff !important;
+  border: 1px solid #cbd5e1 !important;
+}
+
+[data-theme="light"] .login-bg-glow {
+  opacity: 0.2;
+}
+
+/* Bottom Admin Switch Box */
+.login-admin-switch-row {
+  margin-top: 18px;
+  padding-top: 14px;
+  border-top: 1px dashed rgba(255, 255, 255, 0.1);
+  display: flex;
+  justify-content: center;
+}
+
+.admin-switch-link-btn {
+  background: rgba(244, 63, 94, 0.08);
+  border: 1px solid rgba(244, 63, 94, 0.3);
+  border-radius: 12px;
+  padding: 8px 16px;
+  color: #fda4af;
+  font-size: 0.8rem;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  transition: all 0.25s ease;
+}
+
+.admin-switch-link-btn .admin-switch-icon {
+  color: #f43f5e;
+  font-size: 0.95rem;
+}
+
+.admin-switch-link-btn strong {
+  color: #00d4ff;
+  text-decoration: underline;
+}
+
+.admin-switch-link-btn:hover {
+  background: rgba(244, 63, 94, 0.16);
+  border-color: #f43f5e;
+  color: #ffffff;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 14px rgba(244, 63, 94, 0.35);
+}
+
+[data-theme="light"] .login-admin-switch-row {
+  border-top-color: #e2e8f0;
+}
+
+[data-theme="light"] .admin-switch-link-btn {
+  background: rgba(244, 63, 94, 0.06);
+  border-color: rgba(244, 63, 94, 0.25);
+  color: #e11d48;
+}
