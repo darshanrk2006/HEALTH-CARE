@@ -111,6 +111,18 @@ app.use(cors({
 }));
 app.use(express.json());
 
+// Ensure Database is connected before API handlers on Serverless/Vercel
+app.use(async (req, res, next) => {
+  if (req.path.startsWith('/api')) {
+    try {
+      await connectDB();
+    } catch (dbErr) {
+      console.warn('Database connect notice:', dbErr.message);
+    }
+  }
+  next();
+});
+
 // API Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/records', recordRoutes);
