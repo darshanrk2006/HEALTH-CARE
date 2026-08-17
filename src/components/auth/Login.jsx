@@ -123,11 +123,7 @@ const Login = () => {
         });
         setIsOtpStep(true);
         setResendTimer(60);
-        if (res?.otp) {
-          toast.success(`Verification code: ${res.otp}`, { id: 'auth', duration: 10000 });
-        } else {
-          toast.success(`Verification code dispatched to ${email.trim()}`, { id: 'auth' });
-        }
+        toast.success(`Verification code sent to ${email.trim()}! Please check your email inbox.`, { id: 'auth', duration: 6000 });
       } catch (err) {
         // error already toasted in AuthContext
       } finally {
