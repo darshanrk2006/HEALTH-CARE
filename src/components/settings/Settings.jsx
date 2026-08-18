@@ -30,7 +30,8 @@ import {
   FaUpload,
   FaImage,
   FaMagic,
-  FaUserCheck
+  FaUserCheck,
+  FaLock
 } from 'react-icons/fa';
 import { ANIMATED_AVATARS, DEFAULT_AVATAR } from '../../constants/avatarCharacters';
 import toast from 'react-hot-toast';
@@ -559,14 +560,24 @@ const Settings = () => {
                     />
                   </div>
 
-                  <div className="form-field">
-                    <label>Patient Health ID / Medical ID</label>
-                    <input 
-                      type="text" 
-                      value={profileHealthId} 
-                      onChange={(e) => setProfileHealthId(e.target.value)}
-                      placeholder="e.g. TV-8942-AI"
-                    />
+                  <div className="form-field readonly-field-group">
+                    <label className="label-with-badge">
+                      <span>Patient Health ID / Medical ID</span>
+                      <span className="immutable-pill-badge">
+                        <FaLock className="lock-mini-ico" /> System Assigned
+                      </span>
+                    </label>
+                    <div className="readonly-input-box">
+                      <input 
+                        type="text" 
+                        value={user?.healthId || profileHealthId || 'TV-6035-AI'} 
+                        readOnly
+                        disabled
+                        className="readonly-locked-input"
+                        title="Permanent Unique Medical Health Identifier (Immutable)"
+                      />
+                      <FaShieldAlt className="readonly-shield-ico" />
+                    </div>
                   </div>
 
                   <div className="form-field">

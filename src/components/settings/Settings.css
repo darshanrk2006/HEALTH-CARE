@@ -584,6 +584,72 @@ input:checked + .slider:before {
   border-color: var(--accent-cyan);
 }
 
+/* Immutable Health ID Field */
+.label-with-badge {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  width: 100%;
+}
+
+.immutable-pill-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.68rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  padding: 2px 7px;
+  border-radius: 6px;
+  background: rgba(168, 85, 247, 0.12);
+  color: #c084fc;
+  border: 1px solid rgba(168, 85, 247, 0.3);
+}
+
+.lock-mini-ico {
+  font-size: 0.65rem;
+}
+
+.readonly-input-box {
+  position: relative;
+  width: 100%;
+  display: flex;
+  align-items: center;
+}
+
+.readonly-locked-input {
+  background: rgba(255, 255, 255, 0.02) !important;
+  border: 1px dashed rgba(255, 255, 255, 0.18) !important;
+  color: #00d4ff !important;
+  font-weight: 700 !important;
+  letter-spacing: 1px !important;
+  font-family: 'Courier New', monospace, sans-serif !important;
+  cursor: not-allowed !important;
+  padding-right: 36px !important;
+  user-select: all !important;
+}
+
+.readonly-shield-ico {
+  position: absolute;
+  right: 14px;
+  color: rgba(0, 212, 255, 0.6);
+  font-size: 0.9rem;
+  pointer-events: none;
+}
+
+[data-theme="light"] .immutable-pill-badge {
+  background: rgba(147, 51, 234, 0.1);
+  color: #7e22ce;
+  border-color: rgba(147, 51, 234, 0.3);
+}
+
+[data-theme="light"] .readonly-locked-input {
+  background: #f1f5f9 !important;
+  border-color: #cbd5e1 !important;
+  color: #0284c7 !important;
+}
+
 .blood-group-pills {
   display: flex;
   gap: 8px;
