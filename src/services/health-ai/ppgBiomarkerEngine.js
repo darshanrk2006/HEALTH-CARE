@@ -265,27 +265,35 @@ class PPGBiomarkerEngine {
 
   /**
    * Peak and Trough detection algorithm with Parabolic Sub-sample Interpolation
+   * & Adaptive Dynamic Amplitude Thresholding (filters out dicrotic notch peaks)
    */
   detectPeaksAndTroughs(signal) {
     const peaks = [];
     const troughs = [];
-    const minDistance = 10; // Minimum ~330ms between peaks (max ~180 BPM)
+    const minDistance = 12; // Minimum ~400ms between peaks (max ~150 BPM)
+
+    // Calculate signal statistics for dynamic systolic threshold
+    const minVal = Math.min(...signal);
+    const maxVal = Math.max(...signal);
+    const amp = maxVal - minVal;
+    const systolicThreshold = minVal + amp * 0.45;
+    const troughThreshold = minVal + amp * 0.55;
     
     for (let i = 2; i < signal.length - 2; i++) {
       const y0 = signal[i];
       const ym1 = signal[i - 1];
       const yp1 = signal[i + 1];
 
-      // Local maximum (Systolic Peak)
-      if (y0 > ym1 && y0 > signal[i - 2] && y0 >= yp1 && y0 > signal[i + 2]) {
+      // Local maximum (Systolic Peak - must be above systolic threshold)
+      if (y0 > ym1 && y0 > signal[i - 2] && y0 >= yp1 && y0 > signal[i + 2] && y0 >= systolicThreshold) {
         if (peaks.length === 0 || i - peaks[peaks.length - 1].idx >= minDistance) {
           const denom = (ym1 - 2 * y0 + yp1);
           const offset = denom !== 0 ? (ym1 - yp1) / (2 * denom) : 0;
           peaks.push({ idx: i, exactIdx: i + Math.max(-0.5, Math.min(0.5, offset)), val: y0 });
         }
       }
-      // Local minimum (Foot of Pulse Wave)
-      if (y0 < ym1 && y0 < signal[i - 2] && y0 <= yp1 && y0 < signal[i + 2]) {
+      // Local minimum (Foot of Pulse Wave - must be below trough threshold)
+      if (y0 < ym1 && y0 < signal[i - 2] && y0 <= yp1 && y0 < signal[i + 2] && y0 <= troughThreshold) {
         if (troughs.length === 0 || i - troughs[troughs.length - 1].idx >= minDistance) {
           const denom = (ym1 - 2 * y0 + yp1);
           const offset = denom !== 0 ? (ym1 - yp1) / (2 * denom) : 0;
@@ -313,22 +321,67 @@ class PPGBiomarkerEngine {
 
     const { peaks, troughs } = this.detectPeaksAndTroughs(smoothed);
 
-    // 1. Compute Heart Rate (BPM) from Inter-Beat Intervals (IBI) with Sub-Sample Accuracy
+    // 1. Dual-Path Sub-Sample Autocorrelation & IBI Heart Rate Engine
     let heartRate = 72;
     let ibis = [];
     if (peaks.length >= 2) {
       for (let i = 1; i < peaks.length; i++) {
         const frameDiff = peaks[i].exactIdx - peaks[i - 1].exactIdx;
         const timeDiffMs = (frameDiff / this.sampleRate) * 1000;
-        if (timeDiffMs > 320 && timeDiffMs < 1600) {
+        if (timeDiffMs > 280 && timeDiffMs < 1600) {
           ibis.push(timeDiffMs);
         }
       }
-      if (ibis.length > 0) {
-        const meanIbi = ibis.reduce((a, b) => a + b, 0) / ibis.length;
-        heartRate = Math.round(60000 / meanIbi);
-        heartRate = Math.max(45, Math.min(175, heartRate));
+    }
+
+    // Autocorrelation with Parabolic Sub-Lag Peak Interpolation
+    let autocorrHr = null;
+    if (smoothed.length >= 45) {
+      const N = smoothed.length;
+      let maxCorr = -Infinity;
+      let bestLag = 0;
+      const minLag = Math.floor((this.sampleRate * 60) / 185); // ~9.7 frames
+      const maxLag = Math.floor((this.sampleRate * 60) / 45);   // ~40 frames
+
+      const corrValues = [];
+      for (let lag = minLag; lag <= maxLag; lag++) {
+        let sum = 0;
+        let count = 0;
+        for (let i = 0; i < N - lag; i++) {
+          sum += smoothed[i] * smoothed[i + lag];
+          count++;
+        }
+        const corr = count > 0 ? sum / count : 0;
+        corrValues[lag] = corr;
+        if (corr > maxCorr) {
+          maxCorr = corr;
+          bestLag = lag;
+        }
       }
+
+      if (bestLag > minLag && bestLag < maxLag && corrValues[bestLag - 1] !== undefined && corrValues[bestLag + 1] !== undefined) {
+        const y0 = corrValues[bestLag];
+        const ym1 = corrValues[bestLag - 1];
+        const yp1 = corrValues[bestLag + 1];
+        const denom = (ym1 - 2 * y0 + yp1);
+        const subOffset = denom !== 0 ? (ym1 - yp1) / (2 * denom) : 0;
+        const exactLag = bestLag + Math.max(-0.5, Math.min(0.5, subOffset));
+        autocorrHr = (this.sampleRate * 60) / exactLag;
+      } else if (bestLag > 0) {
+        autocorrHr = (this.sampleRate * 60) / bestLag;
+      }
+    }
+
+    if (autocorrHr) {
+      heartRate = Math.round(Math.max(45, Math.min(185, autocorrHr)));
+    } else if (ibis.length >= 2) {
+      ibis.sort((a, b) => a - b);
+      const start = Math.floor(ibis.length * 0.10);
+      const end = Math.max(start + 1, Math.ceil(ibis.length * 0.90));
+      const trimmedIbis = ibis.slice(start, end);
+      const medianIbi = trimmedIbis.reduce((a, b) => a + b, 0) / trimmedIbis.length;
+      heartRate = Math.round(60000 / medianIbi);
+      heartRate = Math.max(45, Math.min(185, heartRate));
     }
 
     // 2. Compute Heart Rate Variability (HRV - RMSSD in ms)
@@ -374,14 +427,14 @@ class PPGBiomarkerEngine {
 
     // 4. Clinical Ridge-Calibrated Biomechanical Model for SBP & DBP (Trained N=12,000 MIMIC-III & PhysioNet)
     const ageDelta = Math.max(0, age - 20);
-    const ageSbpOffset = ageDelta * 0.34;
-    const ageDbpOffset = ageDelta * 0.15;
+    const ageSbpOffset = ageDelta * (age > 60 ? 0.46 : 0.36);
+    const ageDbpOffset = ageDelta * (age > 60 ? 0.12 : 0.16);
     const genderSbpOffset = isMale ? 2.0 : 0;
     const genderDbpOffset = isMale ? 1.0 : 0;
 
     // SBP Model
     let sbpEstimated = 
-      108.5 +
+      109.0 +
       0.22 * (heartRate - 70) +
       ageSbpOffset +
       genderSbpOffset +
@@ -389,7 +442,7 @@ class PPGBiomarkerEngine {
 
     // DBP Model
     let dbpEstimated = 
-      67.5 +
+      68.0 +
       0.18 * (heartRate - 70) +
       ageDbpOffset +
       genderDbpOffset +
@@ -397,20 +450,20 @@ class PPGBiomarkerEngine {
 
     // 1-Point Subject Baseline Calibration (if provided by user profile or cuff calibration)
     if (patientProfile.baselineSbp && patientProfile.baselineDbp) {
-      const sbpCorrection = (patientProfile.baselineSbp - sbpEstimated) * 0.70;
-      const dbpCorrection = (patientProfile.baselineDbp - dbpEstimated) * 0.70;
+      const sbpCorrection = (patientProfile.baselineSbp - sbpEstimated) * 0.94;
+      const dbpCorrection = (patientProfile.baselineDbp - dbpEstimated) * 0.94;
       sbpEstimated += sbpCorrection;
       dbpEstimated += dbpCorrection;
     }
 
-    // Physiological bounds & pulse pressure consistency
+    // Physiological bounds & pulse pressure consistency (allows isolated systolic hypertension up to 105 mmHg PP)
     sbpEstimated = Math.round(Math.max(90, Math.min(185, sbpEstimated)));
     dbpEstimated = Math.round(Math.max(55, Math.min(115, dbpEstimated)));
 
-    if (sbpEstimated - dbpEstimated < 30) {
-      sbpEstimated = dbpEstimated + 35;
-    } else if (sbpEstimated - dbpEstimated > 70) {
-      sbpEstimated = dbpEstimated + 60;
+    if (sbpEstimated - dbpEstimated < 25) {
+      sbpEstimated = dbpEstimated + 30;
+    } else if (sbpEstimated - dbpEstimated > 105) {
+      sbpEstimated = dbpEstimated + 95;
     }
 
     // 5. Mean Arterial Pressure (MAP) & Pulse Pressure (PP)
