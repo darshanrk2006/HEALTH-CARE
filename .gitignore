@@ -36,3 +36,4 @@ Thumbs.db
 *.sw?
 .agents/
 .vercel
+.npm-cache/
