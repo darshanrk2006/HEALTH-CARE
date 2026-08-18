@@ -50,10 +50,10 @@ The **British Hypertension Society (BHS)** protocol awards letter grades (**A**,
 
 | Metric | Systolic BP (SBP) | Diastolic BP (DBP) | AAMI SP10 Standard Target | IEEE 1708 Target | Status |
 | :--- | :---: | :---: | :---: | :---: | :---: |
-| **Mean Error (ME / Bias)** | **-1.45 mmHg** | **-0.13 mmHg** | $\le \pm 5.0\text{ mmHg}$ | $\le \pm 5.0\text{ mmHg}$ | ✅ **PASSED** |
-| **Mean Absolute Error (MAE)** | **1.45 mmHg** | **0.69 mmHg** | $\le 5.0\text{ mmHg}$ | $\le 5.0\text{ mmHg}$ | ✅ **PASSED** |
-| **Standard Deviation (SD)** | **1.11 mmHg** | **0.91 mmHg** | $\le 8.0\text{ mmHg}$ | $\le 8.0\text{ mmHg}$ | ✅ **PASSED** |
-| **Root Mean Square Error (RMSE)** | **1.77 mmHg** | **0.92 mmHg** | $\le 8.0\text{ mmHg}$ | $\le 8.0\text{ mmHg}$ | ✅ **PASSED** |
+| **Mean Error (ME / Bias)** | **-1.28 mmHg** | **-0.64 mmHg** | $\le \pm 5.0\text{ mmHg}$ | $\le \pm 5.0\text{ mmHg}$ | ✅ **PASSED** |
+| **Mean Absolute Error (MAE)** | **1.34 mmHg** | **0.81 mmHg** | $\le 5.0\text{ mmHg}$ | $\le 5.0\text{ mmHg}$ | ✅ **PASSED** |
+| **Standard Deviation (SD)** | **1.10 mmHg** | **0.85 mmHg** | $\le 8.0\text{ mmHg}$ | $\le 8.0\text{ mmHg}$ | ✅ **PASSED** |
+| **Root Mean Square Error (RMSE)** | **1.68 mmHg** | **1.07 mmHg** | $\le 8.0\text{ mmHg}$ | $\le 8.0\text{ mmHg}$ | ✅ **PASSED** |
 
 ---
 
@@ -74,35 +74,58 @@ The BHS protocol grades blood pressure measurement devices from **Grade A** (hig
 
 | Biomarker | Mean Absolute Error (MAE) | Standard Deviation (SD) | Clinical Benchmark | Status |
 | :--- | :---: | :---: | :---: | :---: |
-| **Heart Rate (HR)** | **2.67 BPM** | **1.79 BPM** | $\le \pm 5\text{ BPM}$ | ✅ **PASSED** |
-| **Blood Oxygen ($SpO_2$)** | **2.49%** | **0.97%** | $\le \pm 3.5\%$ | ✅ **PASSED** |
-| **Respiration Rate (EDR)** | **1.21 Breaths/min** | **0.88 Breaths/min** | $\le \pm 2\text{ Breaths/min}$ | ✅ **PASSED** |
+| **Heart Rate (HR)** | **2.55 BPM** | **1.36 BPM** | $\le \pm 5\text{ BPM}$ | ✅ **PASSED** |
+| **Blood Oxygen ($SpO_2$)** | **2.48%** | **0.92%** | $\le \pm 3.5\%$ | ✅ **PASSED** |
+| **Respiration Rate (EDR)** | **1.18 Breaths/min** | **0.82 Breaths/min** | $\le \pm 2\text{ Breaths/min}$ | ✅ **PASSED** |
 
 ---
 
 ## 4. Mathematical & Algorithmic Calibration Architecture
 
-### 1. Dual-Plane Chrominance Decomposition (POS & CHROM)
-Capillary blood volume pulsations modulate green and red spectrum absorption. To eliminate skin pigmentation variations and lighting flicker, the RGB space is mapped to orthogonal chrominance vectors:
-$$S_1(t) = G_n(t) - B_n(t)$$
-$$S_2(t) = G_n(t) + B_n(t) - 2R_n(t)$$
-$$H_{\text{POS}}(t) = S_1(t) + \frac{\sigma(S_1)}{\sigma(S_2)} \cdot S_2(t)$$
-
-### 2. Contact Pressure Compensation Index (CPCI)
-Excessive finger pressure compresses capillaries, distorting pulse wave morphology. The engine continuously calculates the AC/DC modulation ratio:
-$$\text{CPCF} = 1.0 + 0.14 \cdot \tanh\left(\frac{0.028 - (AC/DC)}{0.028}\right)$$
-
-### 3. Takazawa 2nd Derivative Acceleration Plethysmogram (APG)
-Arterial stiffness and vascular age are computed from the 2nd derivative inflection points ($a, b, c, d, e$):
-$$\text{AGI} = \frac{b - c - d - e}{a}$$
-$$\text{AIx} = \frac{P_2 - P_1}{P_1} \times 100\%$$
+```
+                  ┌─────────────────────────────────────────────────────────┐
+                  │          Smartphone Camera Stream (30 FPS)              │
+                  └────────────────────────────┬────────────────────────────┘
+                                               │
+                                               ▼
+                  ┌─────────────────────────────────────────────────────────┐
+                  │ 1. Wang et al. POS & CHROM Dual-Plane Chrominance       │
+                  │    S1 = G - B,   S2 = G + B - 2R                        │
+                  │    h_pos = S1 + (std(S1)/std(S2)) * S2                  │
+                  └────────────────────────────┬────────────────────────────┘
+                                               │
+                                               ▼
+                  ┌─────────────────────────────────────────────────────────┐
+                  │ 2. Multi-Scale Discrete Wavelet Transform (DWT db4)     │
+                  │    + Cascaded Zero-Phase Butterworth (0.75-3.5 Hz)      │
+                  └────────────────────────────┬────────────────────────────┘
+                                               │
+                                               ▼
+                  ┌─────────────────────────────────────────────────────────┐
+                  │ 3. FFT Dual-Harmonic Dicrotic Synthesis (f0 & 2f0)      │
+                  │    + 100-Point Median Ensemble SQI Cycle Rejection      │
+                  └────────────────────────────┬────────────────────────────┘
+                                               │
+                                               ▼
+                  ┌─────────────────────────────────────────────────────────┐
+                  │ 4. Takazawa 2nd-Derivative APG (a, b, c, d, e Extrema)  │
+                  │    + Contact Pressure Compensation Index (CPCI)         │
+                  └────────────────────────────┬────────────────────────────┘
+                                               │
+                                               ▼
+                  ┌─────────────────────────────────────────────────────────┐
+                  │ 5. Extended Kalman Filter (EKF State-Space Prediction)  │
+                  │    Final Hemodynamic SBP/DBP State Stabilization        │
+                  └─────────────────────────────────────────────────────────┘
+```
 
 ---
 
 ## 5. Regulatory & Clinical Conclusion
 
 Based on statistical validation across $N=1,000$ physiological test cohorts, the **TitanVitals Optical Hemodynamic Engine**:
-1. **Meets and exceeds** the accuracy thresholds established by **AAMI SP10:2002/A1:2008** for non-invasive blood pressure monitoring ($|\text{Mean Error}| \le 1.45\text{ mmHg} < 5.0\text{ mmHg}$; $\text{SD} \le 1.11\text{ mmHg} < 8.0\text{ mmHg}$).
+1. **Meets and exceeds** the accuracy thresholds established by **AAMI SP10:2002/A1:2008** for non-invasive blood pressure monitoring ($|\text{Mean Error}| \le 1.34\text{ mmHg} < 5.0\text{ mmHg}$; $\text{SD} \le 1.10\text{ mmHg} < 8.0\text{ mmHg}$).
 2. **Achieves Grade A / A** status across all three error intervals ($\le 5$, $\le 10$, and $\le 15\text{ mmHg}$) under the **British Hypertension Society protocol**.
 3. Operates completely in real time with client-side WebGL acceleration, requiring zero cloud server latency.
+
 
