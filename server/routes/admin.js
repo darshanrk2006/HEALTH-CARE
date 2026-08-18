@@ -678,25 +678,37 @@ router.delete('/audit-logs/:id', requireAdmin, async (req, res) => {
 
 /**
  * DELETE /api/admin/audit-logs/patient/:patientName
- * Delete all audit logs & milestones for a specific in-patient dossier
+ * Delete all audit logs & milestones for a specific in-patient dossier across MongoDB
  */
 router.delete('/audit-logs/patient/:patientName', requireAdmin, async (req, res) => {
   try {
     const patientName = decodeURIComponent(req.params.patientName);
     const regex = new RegExp(`^${patientName}$|\\b${patientName}\\b`, 'i');
     
-    // Find and delete matching audit logs where patient name is in details or action
-    const deleteResult = await AuditLog.deleteMany({
+    // 1. Permanently delete from MongoDB AuditLog collection
+    const auditDeleteResult = await AuditLog.deleteMany({
       $or: [
         { details: { $regex: regex } },
         { action: { $regex: regex } }
       ]
     });
 
+    // 2. Permanently delete matching records from Transfer collection
+    const transferDeleteResult = await Transfer.deleteMany({
+      patientName: { $regex: regex }
+    });
+
+    // 3. Permanently delete matching records from Booking collection
+    const bookingDeleteResult = await Booking.deleteMany({
+      patientName: { $regex: regex }
+    });
+
     res.json({
       success: true,
-      message: `Successfully removed ${deleteResult.deletedCount} audit milestone log(s) for patient "${patientName}".`,
-      deletedCount: deleteResult.deletedCount
+      message: `Successfully removed in-patient record for "${patientName}" from MongoDB database.`,
+      deletedAuditLogs: auditDeleteResult.deletedCount,
+      deletedTransfers: transferDeleteResult.deletedCount,
+      deletedBookings: bookingDeleteResult.deletedCount
     });
   } catch (err) {
     console.error('Delete Patient Dossier Error:', err);

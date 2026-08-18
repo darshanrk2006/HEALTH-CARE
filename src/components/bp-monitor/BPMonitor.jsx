@@ -90,6 +90,7 @@ const BPMonitor = () => {
   const streamRef = useRef(null);
   const animFrameRef = useRef(null);
   const frameCountRef = useRef(0);
+  const fingerDetectedRef = useRef(false);
 
   // 1-Click Research Dataset Exporter (.CSV)
   const exportResearchCSV = () => {
@@ -179,6 +180,8 @@ const BPMonitor = () => {
       animFrameRef.current = null;
     }
     setTorchEnabled(false);
+    fingerDetectedRef.current = false;
+    setFingerDetected(false);
   };
 
   const toggleTorch = async () => {
@@ -212,7 +215,7 @@ const BPMonitor = () => {
     const canvas = hiddenCanvasRef.current;
     const waveCanvas = waveCanvasRef.current;
 
-    let rAvg = 160, gAvg = 90, bAvg = 80;
+    let rAvg = 0, gAvg = 0, bAvg = 0;
 
     if (video && canvas && video.readyState >= 2) {
       const ctx = canvas.getContext('2d', { willReadFrequently: true });
@@ -229,16 +232,11 @@ const BPMonitor = () => {
       rAvg = rSum / count;
       gAvg = gSum / count;
       bAvg = bSum / count;
-    } else {
-      // Physiological oscillation when running without webcam stream
-      const t = Date.now() / 1000;
-      rAvg = 180 + Math.sin(t * 7.2) * 20;
-      gAvg = 90 + Math.sin(t * 7.2) * 16;
-      bAvg = 70;
     }
 
     // Ingest into trained PPG Biomarker Engine (CHROM + Butterworth Filter)
     const frameResult = ppgEngine.ingestFrame(rAvg, gAvg, bAvg, performance.now());
+    fingerDetectedRef.current = frameResult.isContact;
     setFingerDetected(frameResult.isContact);
     setSqi(frameResult.sqi);
     setSnrDb(frameResult.snrDb);
@@ -246,8 +244,8 @@ const BPMonitor = () => {
 
     frameCountRef.current += 1;
 
-    // Periodically compute live dataset-trained biomarkers (every ~10 frames)
-    if (frameCountRef.current % 10 === 0) {
+    // Periodically compute live dataset-trained biomarkers (ONLY when finger is actively detected)
+    if (frameResult.isContact && frameCountRef.current % 8 === 0) {
       const bio = ppgEngine.computeBiomarkers({
         age: user?.age || 26,
         gender: user?.gender || 'male'
@@ -301,13 +299,12 @@ const BPMonitor = () => {
       wCtx.stroke();
       wCtx.setLineDash([]);
 
-      // 3. Draw Pulsatile Arterial Wave with Gradient Glow Area
-      if (smoothed.length > 2) {
+      // 3. Draw Pulsatile Arterial Wave
+      if (frameResult.isContact && smoothed.length > 2) {
         const minVal = Math.min(...smoothed);
         const maxVal = Math.max(...smoothed) || minVal + 1;
         const step = w / 300;
 
-        // Path creation
         const points = smoothed.map((val, idx) => {
           const normY = h - ((val - minVal) / (maxVal - minVal + 0.001)) * (h - 26) - 13;
           const posX = idx * step;
@@ -316,14 +313,9 @@ const BPMonitor = () => {
 
         // Area Gradient under waveform
         const gradient = wCtx.createLinearGradient(0, 0, 0, h);
-        if (frameResult.isContact) {
-          gradient.addColorStop(0, 'rgba(0, 212, 255, 0.28)');
-          gradient.addColorStop(0.7, 'rgba(0, 212, 255, 0.08)');
-          gradient.addColorStop(1, 'rgba(0, 212, 255, 0.0)');
-        } else {
-          gradient.addColorStop(0, 'rgba(239, 68, 68, 0.25)');
-          gradient.addColorStop(1, 'rgba(239, 68, 68, 0.0)');
-        }
+        gradient.addColorStop(0, 'rgba(0, 212, 255, 0.28)');
+        gradient.addColorStop(0.7, 'rgba(0, 212, 255, 0.08)');
+        gradient.addColorStop(1, 'rgba(0, 212, 255, 0.0)');
 
         wCtx.beginPath();
         wCtx.moveTo(points[0].x, h);
@@ -335,9 +327,9 @@ const BPMonitor = () => {
 
         // Wave Stroke
         wCtx.beginPath();
-        wCtx.strokeStyle = frameResult.isContact ? '#00d4ff' : '#ef4444';
+        wCtx.strokeStyle = '#00d4ff';
         wCtx.lineWidth = 2.5;
-        wCtx.shadowColor = frameResult.isContact ? '#00d4ff' : '#ef4444';
+        wCtx.shadowColor = '#00d4ff';
         wCtx.shadowBlur = 12;
 
         points.forEach((pt, idx) => {
@@ -352,12 +344,21 @@ const BPMonitor = () => {
         if (lastPt) {
           wCtx.beginPath();
           wCtx.arc(lastPt.x, lastPt.y, 4, 0, Math.PI * 2);
-          wCtx.fillStyle = frameResult.isContact ? '#00d4ff' : '#ef4444';
+          wCtx.fillStyle = '#00d4ff';
           wCtx.shadowColor = '#00d4ff';
           wCtx.shadowBlur = 14;
           wCtx.fill();
           wCtx.shadowBlur = 0;
         }
+      } else {
+        // Flatline / Prompt when no finger is placed
+        wCtx.font = '13px Inter, sans-serif';
+        wCtx.fillStyle = 'rgba(239, 68, 68, 0.85)';
+        wCtx.textAlign = 'center';
+        wCtx.fillText('⚠️ Cover rear camera lens & flash with your fingertip', w / 2, h / 2 - 8);
+        wCtx.font = '11px Inter, sans-serif';
+        wCtx.fillStyle = 'rgba(255, 255, 255, 0.50)';
+        wCtx.fillText('Capillary pulse detection paused until contact is verified', w / 2, h / 2 + 12);
       }
     }
 
@@ -378,13 +379,13 @@ const BPMonitor = () => {
       toast.loading('Activating camera sensor & LED flash for PPG telemetry...', { id: 'ppg' });
       const camOk = await startCamera();
       setIsScanning(true);
-      setProgress(2);
-      setSignalQuality('Acquiring Capillary Blood Flow...');
+      setProgress(1);
+      setSignalQuality('Place Fingertip Over Camera & Flash');
 
       if (camOk) {
-        toast.success('Camera & Flash Active! Cover lens & flash with fingertip.', { id: 'ppg' });
+        toast.success('Camera & Flash Active! Cover rear lens & flash with fingertip.', { id: 'ppg' });
       } else {
-        toast.success('Running MIMIC-III trained PPG cardiovascular telemetry model', { id: 'ppg' });
+        toast.error('Camera permission required for PPG scanning', { id: 'ppg' });
       }
     }
   };
@@ -396,8 +397,16 @@ const BPMonitor = () => {
       animFrameRef.current = requestAnimationFrame(processFrame);
 
       interval = setInterval(() => {
+        // Strictly PAUSE progress if finger is not covering camera
+        if (!fingerDetectedRef.current) {
+          setSignalQuality('⚠️ Place Fingertip Over Rear Camera & Flash');
+          return;
+        }
+
         setProgress((prev) => {
-          if (prev >= 100) {
+          setSignalQuality('Acquiring Capillary Blood Flow (Calibrating...)');
+          const next = prev + 1;
+          if (next >= 100) {
             setIsScanning(false);
             stopCamera();
 
@@ -449,11 +458,6 @@ const BPMonitor = () => {
               summary: localizedInsight
             }).catch(e => console.warn('BP record auto-save:', e));
 
-            return 0;
-          }
-
-          const next = prev + 4;
-          if (next > 25 && next < 80) {
             setSignalQuality('Optimal Optical Pulse Tracking');
           }
           return next;
