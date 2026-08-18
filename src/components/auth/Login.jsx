@@ -543,7 +543,7 @@ const Login = () => {
                   <h2 className="welcome-heading">Verify Reset Code</h2>
                   <p className="welcome-caption">
                     Enter the 6-digit verification code sent to<br />
-                    <strong className="text-cyan">{forgotEmail}</strong>
+                    <strong className="otp-email-badge">{forgotEmail}</strong>
                   </p>
                 </div>
 
@@ -688,7 +688,7 @@ const Login = () => {
               <h2 className="welcome-heading">Verify Your Email</h2>
               <p className="welcome-caption">
                 Enter the 6-digit code sent to<br />
-                <strong className="text-cyan">{email}</strong>
+                <strong className="otp-email-badge">{email}</strong>
               </p>
             </div>
 
