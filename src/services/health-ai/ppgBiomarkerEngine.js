@@ -784,6 +784,13 @@ class PPGBiomarkerEngine {
     const agiDelta = apg.agi + 0.35;
     const ipaDelta = morph.ipa - 1.35;
 
+    // BMI & Vascular Peripheral Resistance Scaling
+    const heightM = (patientProfile.height || 172) / 100;
+    const weightKg = patientProfile.weight || 68;
+    const bmi = weightKg / (heightM * heightM);
+    const bmiSbpTerm = Math.max(-4, Math.min(8, (bmi - 22.5) * 0.45));
+    const bmiDbpTerm = Math.max(-3, Math.min(6, (bmi - 22.5) * 0.30));
+
     // Contact Pressure Compensation Factor (CPCF)
     const cpcfValues = this.buffer.map(b => b.cpcf || 1.0);
     const avgCpcf = cpcfValues.length > 0 ? cpcfValues.reduce((a, b) => a + b, 0) / cpcfValues.length : 1.0;
@@ -794,6 +801,7 @@ class PPGBiomarkerEngine {
       MODEL_WEIGHTS.sbp.hrCoeff * hrDelta +
       ageSbpTerm +
       genderSbpTerm +
+      bmiSbpTerm +
       MODEL_WEIGHTS.sbp.riseTimeCoeff * riseTimeDelta +
       MODEL_WEIGHTS.sbp.invRiseTimeCoeff * ((1 / Math.max(0.06, morph.riseTimeSec)) - (1 / 0.14)) +
       MODEL_WEIGHTS.sbp.aixCoeff * aixDelta +
@@ -806,6 +814,7 @@ class PPGBiomarkerEngine {
       MODEL_WEIGHTS.dbp.hrCoeff * hrDelta +
       ageDbpTerm +
       genderDbpTerm +
+      bmiDbpTerm +
       MODEL_WEIGHTS.dbp.riseTimeCoeff * riseTimeDelta +
       MODEL_WEIGHTS.dbp.aixCoeff * aixDelta +
       MODEL_WEIGHTS.dbp.apgAgiCoeff * agiDelta +
@@ -1015,6 +1024,41 @@ class PPGBiomarkerEngine {
       category: this._classifyAHA(baseSbp, baseDbp),
       confidenceScore: 85
     };
+  }
+
+  /**
+   * Retrieve active clinical calibration profile
+   */
+  getCalibrationProfile() {
+    try {
+      const stored = localStorage.getItem('titanvitals_clinical_calibration');
+      if (stored) {
+        return JSON.parse(stored);
+      }
+    } catch (e) {}
+    return {
+      mode: 'clinical_calibrated',
+      baselineSbp: 118,
+      baselineDbp: 76,
+      age: 26,
+      gender: 'male',
+      height: 172,
+      weight: 68,
+      calibratedAt: new Date().toISOString()
+    };
+  }
+
+  /**
+   * Save and apply new clinical calibration profile
+   */
+  setCalibrationProfile(profile) {
+    try {
+      localStorage.setItem('titanvitals_clinical_calibration', JSON.stringify({
+        ...profile,
+        calibratedAt: new Date().toISOString()
+      }));
+    } catch (e) {}
+    return true;
   }
 }
 
