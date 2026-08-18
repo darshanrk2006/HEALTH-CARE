@@ -156,6 +156,11 @@ export const deleteAuditLogApi = async (logId) => {
   return res.data;
 };
 
+export const deletePatientDossierApi = async (patientName) => {
+  const res = await axios.delete(`${API_BASE}/audit-logs/patient/${encodeURIComponent(patientName)}`, getAdminAuthHeaders());
+  return res.data;
+};
+
 export const clearAllAuditLogsApi = async () => {
   const res = await axios.delete(`${API_BASE}/audit-logs`, getAdminAuthHeaders());
   return res.data;

@@ -677,6 +677,34 @@ router.delete('/audit-logs/:id', requireAdmin, async (req, res) => {
 });
 
 /**
+ * DELETE /api/admin/audit-logs/patient/:patientName
+ * Delete all audit logs & milestones for a specific in-patient dossier
+ */
+router.delete('/audit-logs/patient/:patientName', requireAdmin, async (req, res) => {
+  try {
+    const patientName = decodeURIComponent(req.params.patientName);
+    const regex = new RegExp(`^${patientName}$|\\b${patientName}\\b`, 'i');
+    
+    // Find and delete matching audit logs where patient name is in details or action
+    const deleteResult = await AuditLog.deleteMany({
+      $or: [
+        { details: { $regex: regex } },
+        { action: { $regex: regex } }
+      ]
+    });
+
+    res.json({
+      success: true,
+      message: `Successfully removed ${deleteResult.deletedCount} audit milestone log(s) for patient "${patientName}".`,
+      deletedCount: deleteResult.deletedCount
+    });
+  } catch (err) {
+    console.error('Delete Patient Dossier Error:', err);
+    res.status(500).json({ success: false, message: 'Failed to delete in-patient dossier.' });
+  }
+});
+
+/**
  * DELETE /api/admin/audit-logs
  * Clear all audit log records
  */

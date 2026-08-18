@@ -72,6 +72,7 @@ import {
   deleteBroadcastApi,
   getAuditLogsApi,
   deleteAuditLogApi,
+  deletePatientDossierApi,
   clearAllAuditLogsApi,
   updateHospitalInventoryApi,
   getBookingsApi,
@@ -681,6 +682,37 @@ const AdminDashboard = () => {
       toast.success('Audit log entry deleted.');
     } catch (err) {
       toast.error('Failed to delete audit log entry');
+    }
+  };
+
+  const handleDeletePatientDossier = async (patientName, logs = []) => {
+    const totalLogs = logs.length || 1;
+    if (!window.confirm(`Are you sure you want to delete all ${totalLogs} milestone log(s) for In-Patient "${patientName}"? This action cannot be undone.`)) {
+      return;
+    }
+
+    try {
+      const logIds = logs.map(l => l._id).filter(Boolean);
+      
+      try {
+        await deletePatientDossierApi(patientName);
+      } catch (endpointErr) {
+        // Fallback: delete each log id individually
+        await Promise.all(logIds.map(id => deleteAuditLogApi(id)));
+      }
+
+      setAuditLogs(prev => prev.filter(l => {
+        if (logIds.includes(l._id)) return false;
+        const detailsLower = (l.details || '').toLowerCase();
+        const actionLower = (l.action || '').toLowerCase();
+        const nameLower = patientName.toLowerCase();
+        return !detailsLower.includes(nameLower) && !actionLower.includes(nameLower);
+      }));
+
+      toast.success(`Complete in-patient log for "${patientName}" deleted successfully!`);
+    } catch (err) {
+      console.error('Failed to delete patient dossier:', err);
+      toast.error(`Failed to delete in-patient log for "${patientName}"`);
     }
   };
 
@@ -2148,8 +2180,20 @@ const AdminDashboard = () => {
                             </div>
 
                             <div className="patient-header-right">
+                              <button
+                                type="button"
+                                className="patient-delete-dossier-btn"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleDeletePatientDossier(patient.name, patient.logs);
+                                }}
+                                title={`Permanently delete all logs and history for In-Patient ${patient.name}`}
+                              >
+                                <FaTrashAlt className="dossier-trash-icon" />
+                                <span className="dossier-trash-label">Delete In-Patient Log</span>
+                              </button>
                               <span className="expand-hint-text">{isExpanded ? 'Close' : 'Expand Timeline'}</span>
-                              <button type="button" className="patient-expand-btn">
+                              <button type="button" className="patient-expand-btn" aria-label="Expand Timeline">
                                 {isExpanded ? <FaChevronUp /> : <FaChevronDown />}
                               </button>
                             </div>
