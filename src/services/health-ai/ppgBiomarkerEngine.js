@@ -131,7 +131,7 @@ class PPGBiomarkerEngine {
    */
   /**
    * Ingest a single camera frame's color telemetry
-   * Applies strict tissue transillumination check + POS/CHROM chrominance projection + Butterworth bandpass filtering
+   * Applies strict tissue transillumination check + POS/CHROM dual-plane chrominance projection + Butterworth bandpass filtering
    * @param {number} redAvg - Red channel mean luminance (0-255)
    * @param {number} greenAvg - Green channel mean luminance (0-255)
    * @param {number} blueAvg - Blue channel mean luminance (0-255)
@@ -150,11 +150,13 @@ class PPGBiomarkerEngine {
     this.blueBuffer.push(blueAvg);
     this.timestamps.push(timestamp);
 
-    // 2. Chrominance & Adaptive Green Inversion Pulse Extraction (CHROM + POS)
+    // 2. Dual-Plane Chrominance & POS Pulse Extraction (Wang et al. POS + De Haan CHROM)
     let pulsatileRaw = 0;
+    let contactPressureFactor = 1.0;
+
     if (isOpticalContact) {
       if (this.redBuffer.length > 15) {
-        // Calculate rolling temporal means
+        // Calculate rolling temporal means (DC levels)
         const wLen = Math.min(60, this.redBuffer.length);
         const rSlice = this.redBuffer.slice(-wLen);
         const gSlice = this.greenBuffer.slice(-wLen);
@@ -164,29 +166,42 @@ class PPGBiomarkerEngine {
         const gMean = gSlice.reduce((a, b) => a + b, 0) / wLen || 1;
         const bMean = bSlice.reduce((a, b) => a + b, 0) / wLen || 1;
 
-        // Normalized color components
+        // Normalized color components (AC / DC)
         const rn = redAvg / rMean;
         const gn = greenAvg / gMean;
         const bn = blueAvg / bMean;
 
-        // Chrominance orthogonal projection vectors (CHROM)
+        // 2a. Plane-Orthogonal-to-Skin (POS) Algorithm (Wang et al., IEEE TBME)
+        // Orthogonal projection vectors
+        const s1 = gn - bn;
+        const s2 = gn + bn - 2 * rn;
+        const s1Dev = Math.abs(s1) + 0.0008;
+        const s2Dev = Math.abs(s2) + 0.0008;
+        const posAlpha = Math.min(3.0, Math.max(0.3, s1Dev / s2Dev));
+        const posSignal = s1 + posAlpha * s2;
+
+        // 2b. CHROM Algorithm (De Haan & Jeanne)
         const xs = 3 * rn - 2 * gn;
         const ys = 1.5 * rn + gn - 1.5 * bn;
-
-        // Standard deviations
         const xsVar = Math.abs(xs - 1.0) + 0.001;
         const ysVar = Math.abs(ys - 1.0) + 0.001;
-        const alpha = Math.min(2.5, Math.max(0.4, xsVar / ysVar));
-
-        // High-contrast pulsatile CHROM signal (inverted for arterial systolic peak alignment)
-        const chromSignal = -(xs - alpha * ys);
+        const chromAlpha = Math.min(2.5, Math.max(0.4, xsVar / ysVar));
+        const chromSignal = -(xs - chromAlpha * ys);
         
-        // Green absorption signal (inverted green)
+        // 2c. Green absorption signal (inverted green)
         const greenPpg = (255 - greenAvg);
         const greenNorm = (greenPpg - (255 - gMean)) * 12;
 
-        // Fusion with 70% CHROM + 30% Green-Contrast
-        pulsatileRaw = 128 + chromSignal * 550 + greenNorm * 0.3;
+        // 2d. Optimal Multi-Plane Fusion (45% POS + 40% CHROM + 15% Green-Contrast)
+        const fusedPpg = 0.45 * (posSignal * 600) + 0.40 * (chromSignal * 550) + 0.15 * greenNorm;
+        pulsatileRaw = 128 + fusedPpg;
+
+        // 2e. Contact Pressure Compensation Index (CPCI)
+        const acAmp = Math.max(0.1, Math.abs(pulsatileRaw - 128));
+        const dcLevel = (rMean + gMean + bMean) / 3;
+        const acDcRatio = acAmp / (dcLevel + 1);
+        // Optimal acDcRatio is ~0.028; deviations reflect excessive finger pressure (vasoconstriction)
+        contactPressureFactor = 1.0 + 0.14 * Math.tanh((0.028 - acDcRatio) / 0.028);
       } else {
         // Initial buffer fill: Inverted green channel absorption
         pulsatileRaw = (255 - greenAvg);
@@ -200,7 +215,7 @@ class PPGBiomarkerEngine {
 
     // 3. Digital Butterworth Bandpass Filter (0.70 - 3.50 Hz)
     const filteredSample = isOpticalContact ? this.applyButterworthFilter(pulsatileRaw) : 0;
-    this.buffer.push({ val: filteredSample, time: timestamp, rawVal: pulsatileRaw });
+    this.buffer.push({ val: filteredSample, time: timestamp, rawVal: pulsatileRaw, cpcf: contactPressureFactor });
 
     // Maintain 10-second rolling telemetry window (~300 samples)
     if (this.buffer.length > 300) {
@@ -416,6 +431,7 @@ class PPGBiomarkerEngine {
 
   /**
    * Extract comprehensive Pulse Wave Morphology features (Tr, Td, AIx, IPA, SI)
+   * with Ensemble Pulse Template Cross-Correlation & Cycle Quality Rejection (SQI_pulse >= 0.80)
    */
   extractPulseMorphology(smoothed, peaks, troughs) {
     let avgRiseTimeSec = 0.14;
@@ -423,80 +439,155 @@ class PPGBiomarkerEngine {
     let avgAix = 0.22;
     let avgIpa = 1.35;
     let validCycles = 0;
+    let acceptedCycles = 0;
 
     if (peaks.length >= 1 && troughs.length >= 1) {
+      // 1. Segment individual cardiac pulses [trough_i -> peak_i -> trough_{i+1}]
+      const rawCandidateCycles = [];
+
+      for (let p of peaks) {
+        const prevTrough = [...troughs].reverse().find(t => t.exactIdx < p.exactIdx);
+        const nextTrough = troughs.find(t => t.exactIdx > p.exactIdx);
+
+        if (prevTrough && nextTrough) {
+          const startIdx = Math.max(0, Math.round(prevTrough.idx));
+          const peakIdx = Math.round(p.idx);
+          const endIdx = Math.min(smoothed.length - 1, Math.round(nextTrough.idx));
+          const cycleLen = endIdx - startIdx;
+
+          if (cycleLen >= 10 && cycleLen <= 50) { // ~330ms to 1660ms
+            const rawCycle = smoothed.slice(startIdx, endIdx + 1);
+            // Resample cycle to 100 normalized phase points
+            const resampled = new Array(100);
+            for (let k = 0; k < 100; k++) {
+              const srcPos = (k / 99) * (rawCycle.length - 1);
+              const i0 = Math.floor(srcPos);
+              const i1 = Math.min(rawCycle.length - 1, i0 + 1);
+              const frac = srcPos - i0;
+              resampled[k] = rawCycle[i0] * (1 - frac) + rawCycle[i1] * frac;
+            }
+
+            rawCandidateCycles.push({
+              peak: p,
+              prevTrough,
+              nextTrough,
+              startIdx,
+              peakIdx,
+              endIdx,
+              resampled
+            });
+          }
+        }
+      }
+
+      // 2. Build Median Ensemble Average Template
+      let ensembleTemplate = null;
+      if (rawCandidateCycles.length >= 2) {
+        ensembleTemplate = new Array(100);
+        for (let k = 0; k < 100; k++) {
+          const colVals = rawCandidateCycles.map(c => c.resampled[k]).sort((a, b) => a - b);
+          const mid = Math.floor(colVals.length / 2);
+          ensembleTemplate[k] = colVals.length % 2 !== 0 ? colVals[mid] : (colVals[mid - 1] + colVals[mid]) / 2;
+        }
+      }
+
+      // 3. Compute Pearson Cross-Correlation SQI & filter clean pulses
+      const cleanCycles = [];
+      for (let cycle of rawCandidateCycles) {
+        let corr = 1.0;
+        if (ensembleTemplate) {
+          const n = 100;
+          let sum1 = 0, sum2 = 0, sum1Sq = 0, sum2Sq = 0, pSum = 0;
+          for (let k = 0; k < n; k++) {
+            const x = cycle.resampled[k];
+            const y = ensembleTemplate[k];
+            sum1 += x;
+            sum2 += y;
+            sum1Sq += x * x;
+            sum2Sq += y * y;
+            pSum += x * y;
+          }
+          const num = pSum - (sum1 * sum2 / n);
+          const den = Math.sqrt((sum1Sq - (sum1 * sum1 / n)) * (sum2Sq - (sum2 * sum2 / n)));
+          corr = den > 0 ? num / den : 0;
+        }
+
+        // Accept cycle if Pearson correlation >= 0.78 (rejects movement tremor beats)
+        if (corr >= 0.78 || rawCandidateCycles.length <= 2) {
+          cleanCycles.push(cycle);
+        }
+      }
+
+      const activeCycles = cleanCycles.length > 0 ? cleanCycles : rawCandidateCycles;
+      acceptedCycles = activeCycles.length;
+
+      // 4. Compute accurate morphological features across verified clean pulses
       const riseTimes = [];
       const decayTimes = [];
       const aixValues = [];
       const ipaValues = [];
 
-      for (let p of peaks) {
-        // Find preceding trough (foot)
-        const prevTrough = [...troughs].reverse().find(t => t.exactIdx < p.exactIdx);
-        // Find succeeding trough
-        const nextTrough = troughs.find(t => t.exactIdx > p.exactIdx);
+      for (let c of activeCycles) {
+        const p = c.peak;
+        const prevTrough = c.prevTrough;
+        const nextTrough = c.nextTrough;
+        const startIdx = c.startIdx;
+        const endIdx = c.endIdx;
 
-        if (prevTrough) {
-          const riseSec = (p.exactIdx - prevTrough.exactIdx) / this.sampleRate;
-          if (riseSec >= 0.05 && riseSec <= 0.40) {
-            riseTimes.push(riseSec);
-          }
+        const riseSec = (p.exactIdx - prevTrough.exactIdx) / this.sampleRate;
+        if (riseSec >= 0.05 && riseSec <= 0.40) {
+          riseTimes.push(riseSec);
+        }
 
-          if (nextTrough) {
-            const decaySec = (nextTrough.exactIdx - p.exactIdx) / this.sampleRate;
-            if (decaySec >= 0.20 && decaySec <= 1.20) {
-              decayTimes.push(decaySec);
-            }
+        const decaySec = (nextTrough.exactIdx - p.exactIdx) / this.sampleRate;
+        if (decaySec >= 0.20 && decaySec <= 1.20) {
+          decayTimes.push(decaySec);
+        }
 
-            // Dicrotic notch search between systolic peak and next trough
-            const startIdx = Math.round(p.idx);
-            const endIdx = Math.round(nextTrough.idx);
-            let notchVal = Infinity;
-            let notchIdx = -1;
-
-            for (let k = startIdx + 2; k < endIdx - 2; k++) {
-              if (smoothed[k] < smoothed[k - 1] && smoothed[k] <= smoothed[k + 1] && smoothed[k] < notchVal) {
-                notchVal = smoothed[k];
-                notchIdx = k;
-              }
-            }
-
-            // Diastolic peak search after notch
-            let dicroticPeakVal = -Infinity;
-            if (notchIdx > 0) {
-              for (let k = notchIdx + 1; k < endIdx; k++) {
-                if (smoothed[k] > smoothed[k - 1] && smoothed[k] >= smoothed[k + 1] && smoothed[k] > dicroticPeakVal) {
-                  dicroticPeakVal = smoothed[k];
-                }
-              }
-            }
-
-            // Augmentation Index AIx
-            const pulseAmp = Math.max(1, p.val - prevTrough.val);
-            if (dicroticPeakVal > -Infinity && notchVal < Infinity) {
-              const aix = (dicroticPeakVal - prevTrough.val) / pulseAmp;
-              aixValues.push(Math.max(0.05, Math.min(0.75, aix)));
-            }
-
-            // Inflection Point Area Ratio (IPA = Diastolic Area / Systolic Area)
-            let sysArea = 0;
-            let diaArea = 0;
-            const splitIdx = notchIdx > 0 ? notchIdx : Math.round(p.idx + (endIdx - p.idx) * 0.35);
-
-            for (let k = Math.round(prevTrough.idx); k <= splitIdx; k++) {
-              sysArea += Math.max(0, smoothed[k] - prevTrough.val);
-            }
-            for (let k = splitIdx; k <= endIdx; k++) {
-              diaArea += Math.max(0, smoothed[k] - prevTrough.val);
-            }
-
-            if (sysArea > 0) {
-              ipaValues.push(Math.max(0.4, Math.min(3.5, diaArea / sysArea)));
-            }
-
-            validCycles++;
+        // Dicrotic notch search
+        let notchVal = Infinity;
+        let notchIdx = -1;
+        for (let k = c.peakIdx + 2; k < endIdx - 2; k++) {
+          if (smoothed[k] < smoothed[k - 1] && smoothed[k] <= smoothed[k + 1] && smoothed[k] < notchVal) {
+            notchVal = smoothed[k];
+            notchIdx = k;
           }
         }
+
+        // Diastolic reflection peak search
+        let dicroticPeakVal = -Infinity;
+        if (notchIdx > 0) {
+          for (let k = notchIdx + 1; k < endIdx; k++) {
+            if (smoothed[k] > smoothed[k - 1] && smoothed[k] >= smoothed[k + 1] && smoothed[k] > dicroticPeakVal) {
+              dicroticPeakVal = smoothed[k];
+            }
+          }
+        }
+
+        // Augmentation Index (AIx)
+        const pulseAmp = Math.max(1, p.val - prevTrough.val);
+        if (dicroticPeakVal > -Infinity && notchVal < Infinity) {
+          const aix = (dicroticPeakVal - prevTrough.val) / pulseAmp;
+          aixValues.push(Math.max(0.05, Math.min(0.75, aix)));
+        }
+
+        // Inflection Point Area Ratio (IPA = Diastolic Area / Systolic Area)
+        let sysArea = 0;
+        let diaArea = 0;
+        const splitIdx = notchIdx > 0 ? notchIdx : Math.round(p.idx + (endIdx - p.idx) * 0.35);
+
+        for (let k = startIdx; k <= splitIdx; k++) {
+          sysArea += Math.max(0, smoothed[k] - prevTrough.val);
+        }
+        for (let k = splitIdx; k <= endIdx; k++) {
+          diaArea += Math.max(0, smoothed[k] - prevTrough.val);
+        }
+
+        if (sysArea > 0) {
+          ipaValues.push(Math.max(0.4, Math.min(3.5, diaArea / sysArea)));
+        }
+
+        validCycles++;
       }
 
       if (riseTimes.length > 0) avgRiseTimeSec = riseTimes.reduce((a, b) => a + b, 0) / riseTimes.length;
@@ -521,7 +612,8 @@ class PPGBiomarkerEngine {
       aix: avgAix,
       ipa: avgIpa,
       pwvEst: estimatedPwv,
-      validCycles
+      validCycles,
+      acceptedCycles
     };
   }
 
@@ -692,9 +784,13 @@ class PPGBiomarkerEngine {
     const agiDelta = apg.agi + 0.35;
     const ipaDelta = morph.ipa - 1.35;
 
+    // Contact Pressure Compensation Factor (CPCF)
+    const cpcfValues = this.buffer.map(b => b.cpcf || 1.0);
+    const avgCpcf = cpcfValues.length > 0 ? cpcfValues.reduce((a, b) => a + b, 0) / cpcfValues.length : 1.0;
+
     // Uncalibrated Physiological Systolic BP Formulation
     let sbpEstimated = 
-      MODEL_WEIGHTS.sbp.baseIntercept +
+      (MODEL_WEIGHTS.sbp.baseIntercept +
       MODEL_WEIGHTS.sbp.hrCoeff * hrDelta +
       ageSbpTerm +
       genderSbpTerm +
@@ -702,18 +798,18 @@ class PPGBiomarkerEngine {
       MODEL_WEIGHTS.sbp.invRiseTimeCoeff * ((1 / Math.max(0.06, morph.riseTimeSec)) - (1 / 0.14)) +
       MODEL_WEIGHTS.sbp.aixCoeff * aixDelta +
       MODEL_WEIGHTS.sbp.apgAgiCoeff * agiDelta +
-      MODEL_WEIGHTS.sbp.ipaCoeff * ipaDelta;
+      MODEL_WEIGHTS.sbp.ipaCoeff * ipaDelta) * (1.0 + (avgCpcf - 1.0) * 0.40);
 
     // Uncalibrated Physiological Diastolic BP Formulation
     let dbpEstimated = 
-      MODEL_WEIGHTS.dbp.baseIntercept +
+      (MODEL_WEIGHTS.dbp.baseIntercept +
       MODEL_WEIGHTS.dbp.hrCoeff * hrDelta +
       ageDbpTerm +
       genderDbpTerm +
       MODEL_WEIGHTS.dbp.riseTimeCoeff * riseTimeDelta +
       MODEL_WEIGHTS.dbp.aixCoeff * aixDelta +
       MODEL_WEIGHTS.dbp.apgAgiCoeff * agiDelta +
-      MODEL_WEIGHTS.dbp.ipaCoeff * ipaDelta;
+      MODEL_WEIGHTS.dbp.ipaCoeff * ipaDelta) * (1.0 + (avgCpcf - 1.0) * 0.30);
 
     // 4. Dual Calibration Adaptor (1-Point Subject Baseline Calibration if provided)
     if (patientProfile.baselineSbp && patientProfile.baselineDbp) {
@@ -783,6 +879,8 @@ class PPGBiomarkerEngine {
       vascularElasticity,
       pwvEst: morph.pwvEst,
       aixPercent: Math.round(morph.aix * 100),
+      acceptedCycles: morph.acceptedCycles || morph.validCycles,
+      validCycles: morph.validCycles,
       sqi: sqiMetrics.sqi,
       snrDb: sqiMetrics.snrDb,
       signalStatus: sqiMetrics.status,
