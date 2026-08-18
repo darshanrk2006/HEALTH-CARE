@@ -84,28 +84,6 @@ const BPMonitor = () => {
     'Aura Telemetry AI standing by. Place finger gently over rear camera sensor with flash on, then start scan to compute clinical hemodynamic biomarkers.'
   );
 
-  // Clinical Calibration State (AAMI SP10 / BHS Grade A)
-  const [showCalibModal, setShowCalibModal] = useState(false);
-  const [calibForm, setCalibForm] = useState(() => {
-    const existing = ppgEngine.getCalibrationProfile();
-    return {
-      ...existing,
-      age: user?.age || existing.age || 26,
-      gender: user?.gender || existing.gender || 'male',
-      baselineSbp: existing.baselineSbp || 118,
-      baselineDbp: existing.baselineDbp || 76,
-      height: existing.height || 172,
-      weight: existing.weight || 68
-    };
-  });
-
-  const handleSaveCalibration = (e) => {
-    e.preventDefault();
-    ppgEngine.setCalibrationProfile(calibForm);
-    setShowCalibModal(false);
-    toast.success('🔬 Clinical Calibration Saved: Model Tuned to AAMI SP10 Grade A!');
-  };
-
   const videoRef = useRef(null);
   const hiddenCanvasRef = useRef(null);
   const waveCanvasRef = useRef(null);
@@ -268,7 +246,10 @@ const BPMonitor = () => {
 
     // Periodically compute live dataset-trained biomarkers (ONLY when finger is actively detected)
     if (frameResult.isContact && frameCountRef.current % 8 === 0) {
-      const bio = ppgEngine.computeBiomarkers(calibForm);
+      const bio = ppgEngine.computeBiomarkers({
+        age: user?.age || 26,
+        gender: user?.gender || 'male'
+      });
 
       setHeartRate(bio.heartRate);
       setBloodPressure(bio.bpString);
@@ -430,7 +411,10 @@ const BPMonitor = () => {
             stopCamera();
 
             // Final dataset biomarker computation
-            const bio = ppgEngine.computeBiomarkers(calibForm);
+            const bio = ppgEngine.computeBiomarkers({
+              age: user?.age || 26,
+              gender: user?.gender || 'male'
+            });
 
             setHeartRate(bio.heartRate);
             setBloodPressure(bio.bpString);
@@ -549,7 +533,8 @@ const BPMonitor = () => {
       setIsPausedAura(false);
     };
 
-    utterance.onerror = () => {
+    utterance.onerror = (e) => {
+      console.warn('Speech synthesis error:', e);
       setIsSpeakingAura(false);
       setIsPausedAura(false);
     };
@@ -577,19 +562,35 @@ const BPMonitor = () => {
   const handleAskAura = async (e) => {
     e.preventDefault();
     if (!auraInput.trim()) return;
-    const query = auraInput;
+
+    const query = auraInput.trim();
     setAuraInput('');
-    handleStopAuraSpeaking();
-    
-    setAuraInsight(`Analyzing "${query}" in ${selectedAuraLanguage}...`);
+    toast.loading('Aura Telemetry AI analyzing your optical hemodynamics...', { id: 'aura' });
 
     try {
-      const response = await aiService.chatbotResponse(
-        `User vitals: BP ${bloodPressure}, HR ${heartRate} bpm, SpO2 ${spo2}%. Language requirement: Answer in ${selectedAuraLanguage}. User query: ${query}`,
-        'Personalized Cardiovascular & Telemetry Insights'
-      );
-      setAuraInsight(response);
+      const liveTelemetryContext = {
+        bloodPressure,
+        heartRate,
+        spo2,
+        hrv,
+        map,
+        pulsePressure,
+        arterialStiffness,
+        vascularElasticity,
+        category: bpCategory?.label,
+        sqi,
+        snrDb,
+        pwvEst,
+        aixPercent,
+        language: selectedAuraLanguage
+      };
+
+      const aiResponse = await aiService.queryAuraAI(query, liveTelemetryContext);
+      setAuraInsight(aiResponse);
+      toast.success('Aura Telemetry AI responded!', { id: 'aura' });
     } catch (err) {
+      console.error('Aura AI Query Error:', err);
+      toast.error('Aura AI service busy. Providing hemodynamic baseline insight.', { id: 'aura' });
       const currentBio = {
         bp: bloodPressure,
         hr: heartRate,
@@ -613,14 +614,6 @@ const BPMonitor = () => {
         <div className="section-title-row">
           <h2 className="bp-section-title">Optical Pulse & BP Capture</h2>
           <div className="sensor-controls">
-            <button 
-              type="button" 
-              className="control-pill-btn"
-              onClick={() => setShowCalibModal(true)}
-              title="Configure Clinical Baseline Calibration"
-            >
-              <FaMicrochip /> Calibrate Model
-            </button>
             {torchSupported && (
               <button 
                 className={`control-pill-btn ${torchEnabled ? 'active' : ''}`}
@@ -983,124 +976,6 @@ const BPMonitor = () => {
           </button>
         </form>
       </div>
-
-      {/* 4. Clinical Calibration Hub Modal (AAMI SP10 & BHS Grade A) */}
-      {showCalibModal && (
-        <div className="calib-modal-overlay" onClick={() => setShowCalibModal(false)}>
-          <div className="calib-modal-card glass-card" onClick={(e) => e.stopPropagation()}>
-            <div className="calib-modal-header">
-              <div className="calib-badge">
-                <FaMicrochip /> AAMI SP10 & BHS Grade A Calibration Hub
-              </div>
-              <button 
-                type="button" 
-                className="calib-close-btn"
-                onClick={() => setShowCalibModal(false)}
-              >
-                ✕
-              </button>
-            </div>
-
-            <h3 className="calib-title">Hemodynamic Sensor & Baseline Calibration</h3>
-            <p className="calib-desc">
-              Calibrate the optical engine with your known arm-cuff blood pressure and demographic parameters to achieve near-zero statistical error (AAMI SP10 target SD &le; 8 mmHg).
-            </p>
-
-            <form onSubmit={handleSaveCalibration} className="calib-form-grid">
-              <div className="calib-field">
-                <label>Baseline Systolic BP (mmHg)</label>
-                <input 
-                  type="number" 
-                  min="80" 
-                  max="200" 
-                  value={calibForm.baselineSbp}
-                  onChange={(e) => setCalibForm({ ...calibForm, baselineSbp: Number(e.target.value) })}
-                  required
-                />
-                <span className="field-hint">e.g. 118 or 120 from hospital cuff</span>
-              </div>
-
-              <div className="calib-field">
-                <label>Baseline Diastolic BP (mmHg)</label>
-                <input 
-                  type="number" 
-                  min="50" 
-                  max="130" 
-                  value={calibForm.baselineDbp}
-                  onChange={(e) => setCalibForm({ ...calibForm, baselineDbp: Number(e.target.value) })}
-                  required
-                />
-                <span className="field-hint">e.g. 76 or 80 from hospital cuff</span>
-              </div>
-
-              <div className="calib-field">
-                <label>Age (Years)</label>
-                <input 
-                  type="number" 
-                  min="12" 
-                  max="100" 
-                  value={calibForm.age}
-                  onChange={(e) => setCalibForm({ ...calibForm, age: Number(e.target.value) })}
-                  required
-                />
-              </div>
-
-              <div className="calib-field">
-                <label>Biological Gender</label>
-                <select 
-                  value={calibForm.gender} 
-                  onChange={(e) => setCalibForm({ ...calibForm, gender: e.target.value })}
-                >
-                  <option value="male">Male (Capillary Compliance Profile A)</option>
-                  <option value="female">Female (Capillary Compliance Profile B)</option>
-                </select>
-              </div>
-
-              <div className="calib-field">
-                <label>Height (cm)</label>
-                <input 
-                  type="number" 
-                  min="100" 
-                  max="230" 
-                  value={calibForm.height}
-                  onChange={(e) => setCalibForm({ ...calibForm, height: Number(e.target.value) })}
-                />
-              </div>
-
-              <div className="calib-field">
-                <label>Weight (kg)</label>
-                <input 
-                  type="number" 
-                  min="30" 
-                  max="200" 
-                  value={calibForm.weight}
-                  onChange={(e) => setCalibForm({ ...calibForm, weight: Number(e.target.value) })}
-                />
-              </div>
-
-              <div className="calib-actions-row">
-                <button 
-                  type="button" 
-                  className="calib-reset-btn"
-                  onClick={() => setCalibForm({
-                    baselineSbp: 118,
-                    baselineDbp: 76,
-                    age: 26,
-                    gender: 'male',
-                    height: 172,
-                    weight: 68
-                  })}
-                >
-                  Reset Defaults
-                </button>
-                <button type="submit" className="calib-submit-btn">
-                  <FaCheckCircle /> Save & Apply Calibration
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
     </div>
   );
 };
