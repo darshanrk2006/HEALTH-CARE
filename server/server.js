@@ -145,9 +145,10 @@ app.get('/api/health', (req, res) => {
   });
 });
 
-// Wildcard Fallback for React Router SPA
-app.get('*', (req, res, next) => {
+// Universal SPA Fallback for React Router
+app.use((req, res, next) => {
   if (req.path.startsWith('/api')) return next();
+  if (req.method !== 'GET') return next();
   res.sendFile(path.join(distPath, 'index.html'));
 });
 
