@@ -616,9 +616,8 @@ const Chatbot = () => {
 
               {/* Close Window */}
               <button
-                className="header-action-btn bot-close-btn custom-tooltip-btn"
+                className="header-action-btn bot-close-btn"
                 onClick={() => setIsOpen(false)}
-                data-tooltip="Close Chat"
                 title="Close Chat"
                 aria-label="Close Chat"
               >

@@ -336,12 +336,13 @@
   background: linear-gradient(135deg, #b91c1c, #7f1d1d);
   border-color: #ef4444;
   color: #ffffff;
-  transform: scale(1.15) rotate(90deg);
+  transform: scale(1.1);
   box-shadow: 0 0 18px rgba(239, 68, 68, 0.85);
 }
 
 .header-action-btn.bot-close-btn:hover svg {
   stroke: #ffffff;
+  transform: rotate(90deg);
   filter: drop-shadow(0 0 8px rgba(255, 255, 255, 0.9));
 }
 
