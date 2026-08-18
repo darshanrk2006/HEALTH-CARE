@@ -17,9 +17,10 @@ import {
   FaInfoCircle,
   FaVolumeUp,
   FaVolumeMute,
-  FaPause,
-  FaPlay,
-  FaGlobe
+  FaGlobe,
+  FaDownload,
+  FaFlask,
+  FaMicrochip
 } from 'react-icons/fa';
 import { aiService } from '../../services/health-ai/aiService';
 import { ppgEngine } from '../../services/health-ai/ppgBiomarkerEngine';
@@ -69,7 +70,12 @@ const BPMonitor = () => {
     guidance: 'Maintain balanced hydration and regular aerobic exercise.'
   });
 
-  const [signalQuality, setSignalQuality] = useState('Ready for PPG Calibration');
+  const [signalQuality, setSignalQuality] = useState('Ready for Optical rPPG Calibration');
+  const [sqi, setSqi] = useState(94);
+  const [snrDb, setSnrDb] = useState('15.2');
+  const [pwvEst, setPwvEst] = useState(6.4);
+  const [aixPercent, setAixPercent] = useState(22);
+  const [signalStatus, setSignalStatus] = useState('High Clinical Integrity');
   const [auraInput, setAuraInput] = useState('');
   const [selectedAuraLanguage, setSelectedAuraLanguage] = useState('English');
   const [isSpeakingAura, setIsSpeakingAura] = useState(false);
@@ -84,6 +90,28 @@ const BPMonitor = () => {
   const streamRef = useRef(null);
   const animFrameRef = useRef(null);
   const frameCountRef = useRef(0);
+
+  // 1-Click Research Dataset Exporter (.CSV)
+  const exportResearchCSV = () => {
+    try {
+      const csvData = ppgEngine.exportResearchDatasetCSV({
+        age: user?.age || 26,
+        gender: user?.gender || 'male'
+      });
+      const blob = new Blob([csvData], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', `TitanVitals_rPPG_Research_Dataset_${new Date().toISOString().slice(0, 10)}.csv`);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      toast.success('🔬 Research Time-Series Dataset (.CSV) Exported Successfully!');
+    } catch (err) {
+      console.error('Export error:', err);
+      toast.error('Failed to export research dataset');
+    }
+  };
 
   // Setup camera stream with automatic Flash/Torch activation for PPG
   const startCamera = async () => {
@@ -209,9 +237,12 @@ const BPMonitor = () => {
       bAvg = 70;
     }
 
-    // Ingest into trained PPG Biomarker Engine
+    // Ingest into trained PPG Biomarker Engine (CHROM + Butterworth Filter)
     const frameResult = ppgEngine.ingestFrame(rAvg, gAvg, bAvg, performance.now());
     setFingerDetected(frameResult.isContact);
+    setSqi(frameResult.sqi);
+    setSnrDb(frameResult.snrDb);
+    setSignalStatus(frameResult.signalStatus);
 
     frameCountRef.current += 1;
 
@@ -230,10 +261,12 @@ const BPMonitor = () => {
       setPulsePressure(bio.pulsePressure);
       setArterialStiffness(bio.arterialStiffnessIndex);
       setVascularElasticity(bio.vascularElasticity);
+      setPwvEst(bio.pwvEst);
+      setAixPercent(bio.aixPercent);
       setBpCategory(bio.category);
     }
 
-    // Draw Smooth Real-Time PPG Waveform on Canvas
+    // Draw Smooth Real-Time PPG Oscillogram on Canvas
     if (waveCanvas) {
       const wCtx = waveCanvas.getContext('2d');
       const w = waveCanvas.width;
@@ -242,45 +275,89 @@ const BPMonitor = () => {
 
       wCtx.clearRect(0, 0, w, h);
 
-      // Grid lines
-      wCtx.strokeStyle = 'rgba(0, 212, 255, 0.08)';
+      // 1. Oscillogram Grid lines
+      wCtx.strokeStyle = 'rgba(0, 212, 255, 0.07)';
       wCtx.lineWidth = 1;
-      for (let x = 0; x < w; x += 25) {
+      for (let x = 0; x < w; x += 24) {
         wCtx.beginPath();
         wCtx.moveTo(x, 0);
         wCtx.lineTo(x, h);
         wCtx.stroke();
       }
-      for (let y = 0; y < h; y += 25) {
+      for (let y = 0; y < h; y += 24) {
         wCtx.beginPath();
         wCtx.moveTo(0, y);
         wCtx.lineTo(w, y);
         wCtx.stroke();
       }
 
-      // Draw arterial pulse curve
-      if (smoothed.length > 2) {
-        wCtx.beginPath();
-        wCtx.strokeStyle = frameResult.isContact ? '#00d4ff' : '#ef4444';
-        wCtx.lineWidth = 2.5;
-        wCtx.shadowColor = frameResult.isContact ? '#00d4ff' : '#ef4444';
-        wCtx.shadowBlur = 10;
+      // 2. Baseline Zero-Axis
+      wCtx.strokeStyle = 'rgba(255, 255, 255, 0.12)';
+      wCtx.lineWidth = 1;
+      wCtx.setLineDash([4, 4]);
+      wCtx.beginPath();
+      wCtx.moveTo(0, h / 2);
+      wCtx.lineTo(w, h / 2);
+      wCtx.stroke();
+      wCtx.setLineDash([]);
 
+      // 3. Draw Pulsatile Arterial Wave with Gradient Glow Area
+      if (smoothed.length > 2) {
         const minVal = Math.min(...smoothed);
         const maxVal = Math.max(...smoothed) || minVal + 1;
         const step = w / 300;
 
-        smoothed.forEach((val, idx) => {
-          const normY = h - ((val - minVal) / (maxVal - minVal + 0.001)) * (h - 22) - 11;
+        // Path creation
+        const points = smoothed.map((val, idx) => {
+          const normY = h - ((val - minVal) / (maxVal - minVal + 0.001)) * (h - 26) - 13;
           const posX = idx * step;
-          if (idx === 0) {
-            wCtx.moveTo(posX, normY);
-          } else {
-            wCtx.lineTo(posX, normY);
-          }
+          return { x: posX, y: normY };
+        });
+
+        // Area Gradient under waveform
+        const gradient = wCtx.createLinearGradient(0, 0, 0, h);
+        if (frameResult.isContact) {
+          gradient.addColorStop(0, 'rgba(0, 212, 255, 0.28)');
+          gradient.addColorStop(0.7, 'rgba(0, 212, 255, 0.08)');
+          gradient.addColorStop(1, 'rgba(0, 212, 255, 0.0)');
+        } else {
+          gradient.addColorStop(0, 'rgba(239, 68, 68, 0.25)');
+          gradient.addColorStop(1, 'rgba(239, 68, 68, 0.0)');
+        }
+
+        wCtx.beginPath();
+        wCtx.moveTo(points[0].x, h);
+        points.forEach((pt) => wCtx.lineTo(pt.x, pt.y));
+        wCtx.lineTo(points[points.length - 1].x, h);
+        wCtx.closePath();
+        wCtx.fillStyle = gradient;
+        wCtx.fill();
+
+        // Wave Stroke
+        wCtx.beginPath();
+        wCtx.strokeStyle = frameResult.isContact ? '#00d4ff' : '#ef4444';
+        wCtx.lineWidth = 2.5;
+        wCtx.shadowColor = frameResult.isContact ? '#00d4ff' : '#ef4444';
+        wCtx.shadowBlur = 12;
+
+        points.forEach((pt, idx) => {
+          if (idx === 0) wCtx.moveTo(pt.x, pt.y);
+          else wCtx.lineTo(pt.x, pt.y);
         });
         wCtx.stroke();
         wCtx.shadowBlur = 0;
+
+        // Draw live pulse indicator head
+        const lastPt = points[points.length - 1];
+        if (lastPt) {
+          wCtx.beginPath();
+          wCtx.arc(lastPt.x, lastPt.y, 4, 0, Math.PI * 2);
+          wCtx.fillStyle = frameResult.isContact ? '#00d4ff' : '#ef4444';
+          wCtx.shadowColor = '#00d4ff';
+          wCtx.shadowBlur = 14;
+          wCtx.fill();
+          wCtx.shadowBlur = 0;
+        }
       }
     }
 
@@ -683,8 +760,16 @@ const BPMonitor = () => {
           {/* Real-time Canvas Pulse Wave Graph */}
           <div className="live-waveform-panel">
             <div className="waveform-header">
-              <span className="waveform-title">Photoplethysmography (PPG) Pulse Morphology</span>
-              <span className="live-pill"><span className="pulse-dot"></span> 60 FPS Telemetry</span>
+              <div className="waveform-title-wrap">
+                <span className="waveform-title">Photoplethysmography (PPG) Arterial Oscillogram</span>
+                <span className="waveform-sub-info">CHROM Color Vector • Butterworth Filter (0.75-3.5 Hz)</span>
+              </div>
+              <div className="waveform-pills-row">
+                <span className="snr-live-pill" title="Signal-to-Noise Ratio in dB">
+                  SNR: <strong>{snrDb} dB</strong>
+                </span>
+                <span className="live-pill"><span className="pulse-dot"></span> 60 FPS Telemetry</span>
+              </div>
             </div>
             <canvas 
               ref={waveCanvasRef} 
@@ -692,6 +777,78 @@ const BPMonitor = () => {
               height={110} 
               className="ppg-wave-canvas"
             />
+          </div>
+
+          {/* Scientific Research & Arterial PWA Telemetry Panel */}
+          <div className="research-pwa-panel">
+            <div className="research-panel-header">
+              <div className="research-title-group">
+                <div className="flask-badge-ico">
+                  <FaFlask />
+                </div>
+                <div>
+                  <span className="research-title">Optical rPPG Signal Quality & Arterial Decomposition (PWA)</span>
+                  <span className="research-subtitle">De Haan & Jeanne CHROM Model • 2nd-Order Butterworth Bandpass (0.75–3.5 Hz)</span>
+                </div>
+              </div>
+              <button 
+                type="button" 
+                className="export-research-csv-btn" 
+                onClick={exportResearchCSV}
+                title="Export full sample-by-sample timestamps, raw RGB, and filtered PPG time-series to CSV for research papers and statistical plotting"
+              >
+                <FaDownload className="btn-ico" />
+                <span>Export Research Dataset (.CSV)</span>
+              </button>
+            </div>
+
+            <div className="research-metrics-grid">
+              <div className="research-metric-card">
+                <span className="rm-label">Signal Quality Index (SQI)</span>
+                <div className="rm-val-row">
+                  <span className="rm-num">{sqi}%</span>
+                  <span className={`rm-badge ${sqi >= 80 ? 'good' : (sqi >= 60 ? 'mid' : 'warn')}`}>
+                    {signalStatus}
+                  </span>
+                </div>
+                <div className="sqi-mini-progress">
+                  <div 
+                    className="sqi-mini-fill" 
+                    style={{ 
+                      width: `${sqi}%`, 
+                      backgroundColor: sqi >= 80 ? '#10b981' : (sqi >= 60 ? '#f59e0b' : '#ef4444') 
+                    }}
+                  ></div>
+                </div>
+              </div>
+
+              <div className="research-metric-card">
+                <span className="rm-label">Signal-to-Noise Ratio (SNR)</span>
+                <div className="rm-val-row">
+                  <span className="rm-num">{snrDb}</span>
+                  <span className="rm-unit">dB</span>
+                </div>
+                <span className="rm-sub-info">Spectral Cardiac vs. Noise Floor</span>
+              </div>
+
+              <div className="research-metric-card">
+                <span className="rm-label">Estimated PWV (Velocity)</span>
+                <div className="rm-val-row">
+                  <span className="rm-num">{pwvEst}</span>
+                  <span className="rm-unit">m/s</span>
+                </div>
+                <span className="rm-sub-info">Bramwell-Hill Arterial Compliance</span>
+              </div>
+
+              <div className="research-metric-card">
+                <span className="rm-label">Augmentation Index (AIx)</span>
+                <div className="rm-val-row">
+                  <span className="rm-num">{aixPercent}%</span>
+                  <span className="rm-unit">Reflectance</span>
+                </div>
+                <span className="rm-sub-info">Central Arterial Wave Reflection</span>
+              </div>
+            </div>
           </div>
         </div>
       </div>

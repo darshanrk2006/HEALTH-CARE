@@ -432,23 +432,57 @@
 .live-waveform-panel {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 10px;
   background: var(--bg-primary);
   border: 1px solid var(--border-color);
   border-radius: 14px;
-  padding: 12px 16px;
+  padding: 14px 18px;
 }
 
 .waveform-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.waveform-title-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
 }
 
 .waveform-title {
-  font-size: 0.78rem;
-  font-weight: 700;
+  font-size: 0.84rem;
+  font-weight: 800;
+  color: var(--text-primary);
+}
+
+.waveform-sub-info {
+  font-size: 0.68rem;
   color: var(--text-secondary);
+  font-weight: 600;
+}
+
+.waveform-pills-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.snr-live-pill {
+  font-size: 0.68rem;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 6px;
+  background: rgba(16, 185, 129, 0.12);
+  color: #10b981;
+  border: 1px solid rgba(16, 185, 129, 0.3);
+}
+
+.snr-live-pill strong {
+  color: #34d399;
 }
 
 .live-pill {
@@ -462,9 +496,176 @@
 
 .ppg-wave-canvas {
   width: 100%;
-  height: 90px;
+  height: 95px;
+  border-radius: 10px;
+  background: #020617;
+  border: 1px solid rgba(0, 212, 255, 0.15);
+}
+
+/* Scientific Research & Arterial PWA Telemetry Panel */
+.research-pwa-panel {
+  margin-top: 14px;
+  background: rgba(0, 212, 255, 0.02);
+  border: 1px dashed rgba(0, 212, 255, 0.3);
+  border-radius: 14px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.research-panel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.research-title-group {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.flask-badge-ico {
+  width: 32px;
+  height: 32px;
   border-radius: 8px;
-  background: var(--bg-secondary);
+  background: linear-gradient(135deg, rgba(0, 212, 255, 0.2), rgba(124, 58, 237, 0.2));
+  color: #00d4ff;
+  border: 1px solid rgba(0, 212, 255, 0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.9rem;
+  flex-shrink: 0;
+}
+
+.research-title {
+  display: block;
+  font-size: 0.82rem;
+  font-weight: 800;
+  color: var(--text-primary);
+}
+
+.research-subtitle {
+  display: block;
+  font-size: 0.68rem;
+  color: var(--text-secondary);
+  font-weight: 600;
+}
+
+.export-research-csv-btn {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 6px !important;
+  padding: 7px 14px !important;
+  border-radius: 9px !important;
+  background: linear-gradient(135deg, rgba(0, 212, 255, 0.15), rgba(124, 58, 237, 0.15)) !important;
+  border: 1px solid rgba(0, 212, 255, 0.4) !important;
+  color: #00d4ff !important;
+  font-size: 0.76rem !important;
+  font-weight: 700 !important;
+  cursor: pointer !important;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1) !important;
+}
+
+.export-research-csv-btn:hover {
+  background: linear-gradient(135deg, rgba(0, 212, 255, 0.3), rgba(124, 58, 237, 0.3)) !important;
+  border-color: #00d4ff !important;
+  color: #ffffff !important;
+  transform: translateY(-1px) !important;
+  box-shadow: 0 4px 14px rgba(0, 212, 255, 0.25) !important;
+}
+
+.btn-ico {
+  font-size: 0.78rem !important;
+}
+
+.research-metrics-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+  gap: 12px;
+}
+
+.research-metric-card {
+  background: var(--bg-primary);
+  border: 1px solid var(--border-color);
+  border-radius: 10px;
+  padding: 10px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.rm-label {
+  font-size: 0.68rem;
+  font-weight: 700;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+
+.rm-val-row {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+}
+
+.rm-num {
+  font-size: 1.15rem;
+  font-weight: 900;
+  color: var(--text-primary);
+  font-family: 'Courier New', monospace, sans-serif;
+}
+
+.rm-unit {
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: #00d4ff;
+}
+
+.rm-badge {
+  font-size: 0.62rem;
+  font-weight: 800;
+  padding: 1px 6px;
+  border-radius: 4px;
+}
+
+.rm-badge.good {
+  background: rgba(16, 185, 129, 0.15);
+  color: #10b981;
+}
+
+.rm-badge.mid {
+  background: rgba(245, 158, 11, 0.15);
+  color: #f59e0b;
+}
+
+.rm-badge.warn {
+  background: rgba(239, 68, 68, 0.15);
+  color: #ef4444;
+}
+
+.rm-sub-info {
+  font-size: 0.62rem;
+  color: var(--text-secondary);
+  font-weight: 500;
+}
+
+.sqi-mini-progress {
+  width: 100%;
+  height: 4px;
+  border-radius: 2px;
+  background: rgba(255, 255, 255, 0.08);
+  overflow: hidden;
+  margin-top: 2px;
+}
+
+.sqi-mini-fill {
+  height: 100%;
+  transition: width 0.3s ease, background-color 0.3s ease;
 }
 
 /* 3. Aura AI Card */
