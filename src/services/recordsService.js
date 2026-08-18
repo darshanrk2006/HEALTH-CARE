@@ -108,7 +108,8 @@ const getSeedRecords = () => {
 };
 
 /**
- * Save a new health record
+ * Save a new health record (BP, Lab Report, Prescription, General)
+ * Persists immediately to LocalStorage and syncs to MongoDB / Serverless API
  */
 export const saveHealthRecord = async ({ type, title, data, summary = '', notes = '' }) => {
   const userId = getCurrentUserId();
@@ -127,7 +128,25 @@ export const saveHealthRecord = async ({ type, title, data, summary = '', notes 
   const localRecord = { ...payload, _id: `local-${Date.now()}`, id: `local-${Date.now()}` };
   setLocalRecords([localRecord, ...localList]);
 
-  // 2. Sync to Backend Database
+  // If this was a BP / Vitals scan, save the latest vitals snapshot
+  if (type === 'bp' && data) {
+    try {
+      localStorage.setItem('titanvitals_latest_vitals', JSON.stringify({
+        ...data,
+        createdAt: payload.createdAt
+      }));
+    } catch (e) {}
+  }
+
+  // 2. Dispatch instant reactive window events across all tabs/components
+  if (typeof window !== 'undefined') {
+    window.dispatchEvent(new CustomEvent('titanvitals_records_updated', { detail: localRecord }));
+    if (type === 'bp') {
+      window.dispatchEvent(new CustomEvent('titanvitals_vitals_updated', { detail: data }));
+    }
+  }
+
+  // 3. Sync to Backend Database
   try {
     const res = await fetch(API_BASE, {
       method: 'POST',
@@ -140,7 +159,7 @@ export const saveHealthRecord = async ({ type, title, data, summary = '', notes 
       return json.record || localRecord;
     }
   } catch (error) {
-    console.warn('Backend database offline. Record safely stored locally.', error.message);
+    console.warn('Backend database sync note:', error.message);
   }
 
   return localRecord;

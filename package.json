@@ -43,6 +43,7 @@
   "devDependencies": {
     "@vitejs/plugin-basic-ssl": "^2.3.0",
     "@vitejs/plugin-react": "^5.2.0",
+    "vercel": "^59.1.4",
     "vite": "^7.1.7"
   }
 }

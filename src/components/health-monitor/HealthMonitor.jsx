@@ -45,6 +45,18 @@ const HealthMonitor = () => {
 
   useEffect(() => {
     loadRecords(activeCategory);
+
+    const handleRecordsUpdate = () => {
+      loadRecords(activeCategory);
+    };
+
+    window.addEventListener('titanvitals_records_updated', handleRecordsUpdate);
+    window.addEventListener('storage', handleRecordsUpdate);
+
+    return () => {
+      window.removeEventListener('titanvitals_records_updated', handleRecordsUpdate);
+      window.removeEventListener('storage', handleRecordsUpdate);
+    };
   }, [activeCategory]);
 
   // Handle Record Deletion

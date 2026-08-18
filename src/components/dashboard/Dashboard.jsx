@@ -30,11 +30,17 @@ const Dashboard = () => {
   const [isSyncing, setIsSyncing] = useState(false);
   const [heartRate, setHeartRate] = useState(72);
   const [bloodPressure, setBloodPressure] = useState('118/72');
+  const [spo2, setSpo2] = useState(98);
+  const [hrv, setHrv] = useState(45);
+  const [bpCategory, setBpCategory] = useState({ label: 'Optimal', tagClass: 'normal', color: '#10b981' });
+  const [vascularElasticity, setVascularElasticity] = useState('Optimal Elasticity');
   const [lastScanTime, setLastScanTime] = useState('Recently');
+  const [recentScans, setRecentScans] = useState([]);
 
-  // Load real latest BP scan from database records
-  const loadLatestVitals = async () => {
+  // Load real latest vitals and recent scan documents from database
+  const loadLatestVitalsAndScans = async () => {
     try {
+      // 1. Fetch latest BP scan
       const bpRecords = await getHealthRecords('bp');
       if (bpRecords && bpRecords.length > 0) {
         const latest = bpRecords[0];
@@ -44,10 +50,30 @@ const Dashboard = () => {
           else if (latest.data.systolic && latest.data.diastolic) {
             setBloodPressure(`${latest.data.systolic}/${latest.data.diastolic}`);
           }
+          if (latest.data.spo2) setSpo2(latest.data.spo2);
+          if (latest.data.hrvRmssd) setHrv(latest.data.hrvRmssd);
+          if (latest.data.vascularElasticity) setVascularElasticity(latest.data.vascularElasticity);
+          if (latest.data.category) {
+            const cat = latest.data.category;
+            const label = typeof cat === 'object' ? cat.label : cat;
+            setBpCategory({
+              label: label || 'Normal BP',
+              tagClass: label?.toLowerCase().includes('stage') ? 'stage1' : 'normal',
+              color: label?.toLowerCase().includes('stage') ? '#f97316' : '#10b981'
+            });
+          }
           if (latest.createdAt) {
-            setLastScanTime(new Date(latest.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }));
+            const date = new Date(latest.createdAt);
+            const isToday = new Date().toDateString() === date.toDateString();
+            setLastScanTime(isToday ? date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : date.toLocaleDateString([], { month: 'short', day: 'numeric' }));
           }
         }
+      }
+
+      // 2. Fetch all recent scans
+      const allRecords = await getHealthRecords('all');
+      if (allRecords && allRecords.length > 0) {
+        setRecentScans(allRecords.slice(0, 4));
       }
     } catch (e) {
       console.warn('Could not load latest vitals from records:', e);
@@ -55,12 +81,41 @@ const Dashboard = () => {
   };
 
   useEffect(() => {
-    loadLatestVitals();
+    loadLatestVitalsAndScans();
+
+    // Instant cross-component event listeners
+    const handleVitalsUpdate = (e) => {
+      if (e.detail) {
+        if (e.detail.heartRate) setHeartRate(e.detail.heartRate);
+        if (e.detail.bpString) setBloodPressure(e.detail.bpString);
+        if (e.detail.spo2) setSpo2(e.detail.spo2);
+        if (e.detail.hrvRmssd) setHrv(e.detail.hrvRmssd);
+        if (e.detail.vascularElasticity) setVascularElasticity(e.detail.vascularElasticity);
+        setLastScanTime('Just Now');
+      }
+      loadLatestVitalsAndScans();
+    };
+
+    const handleRecordsUpdate = () => {
+      loadLatestVitalsAndScans();
+    };
+
+    window.addEventListener('titanvitals_vitals_updated', handleVitalsUpdate);
+    window.addEventListener('titanvitals_records_updated', handleRecordsUpdate);
+    window.addEventListener('storage', handleRecordsUpdate);
+    window.addEventListener('focus', handleRecordsUpdate);
+
+    return () => {
+      window.removeEventListener('titanvitals_vitals_updated', handleVitalsUpdate);
+      window.removeEventListener('titanvitals_records_updated', handleRecordsUpdate);
+      window.removeEventListener('storage', handleRecordsUpdate);
+      window.removeEventListener('focus', handleRecordsUpdate);
+    };
   }, []);
 
   const handleRefreshVitals = async () => {
     setIsSyncing(true);
-    await loadLatestVitals();
+    await loadLatestVitalsAndScans();
     setTimeout(() => {
       setIsSyncing(false);
       toast.success('Health records refreshed from database');
@@ -180,7 +235,7 @@ const Dashboard = () => {
         </div>
 
         <div className="vitals-grid">
-          {/* Heart Rate Card */}
+          {/* 1. Heart Rate Card */}
           <div
             className="vital-card glass-card"
             onClick={() => navigate('/bp-monitor')}
@@ -190,7 +245,7 @@ const Dashboard = () => {
                 <FaHeartbeat />
               </div>
               <span className="vital-badge normal-badge">
-                Recorded {lastScanTime}
+                {lastScanTime.includes('Recorded') ? lastScanTime : `Recorded ${lastScanTime}`}
               </span>
             </div>
             <div className="vital-value-row">
@@ -200,7 +255,7 @@ const Dashboard = () => {
             <span className="vital-label">Measured Heart Rate</span>
           </div>
 
-          {/* Blood Pressure Card */}
+          {/* 2. Blood Pressure Card */}
           <div
             className="vital-card glass-card"
             onClick={() => navigate('/bp-monitor')}
@@ -209,7 +264,12 @@ const Dashboard = () => {
               <div className="vital-icon-box bp-box">
                 <FaTint />
               </div>
-              <span className="vital-badge normal-badge">Optimal</span>
+              <span 
+                className={`vital-badge ${bpCategory.tagClass || 'normal'}-badge`}
+                style={{ color: bpCategory.color, borderColor: `${bpCategory.color}40`, background: `${bpCategory.color}15` }}
+              >
+                {bpCategory.label || 'Optimal'}
+              </span>
             </div>
             <div className="vital-value-row">
               <span className="vital-number">{bloodPressure}</span>
@@ -217,65 +277,121 @@ const Dashboard = () => {
             </div>
             <span className="vital-label">Blood Pressure</span>
           </div>
+
+          {/* 3. Blood Oxygen (SpO2) Card */}
+          <div
+            className="vital-card glass-card"
+            onClick={() => navigate('/bp-monitor')}
+          >
+            <div className="vital-card-top">
+              <div className="vital-icon-box" style={{ background: 'rgba(6, 182, 212, 0.15)', color: '#06b6d4' }}>
+                <FaChartLine />
+              </div>
+              <span className="vital-badge normal-badge" style={{ color: '#06b6d4', background: 'rgba(6, 182, 212, 0.12)' }}>
+                {spo2 >= 95 ? 'Normal Saturation' : 'Low Saturation'}
+              </span>
+            </div>
+            <div className="vital-value-row">
+              <span className="vital-number">{spo2}</span>
+              <span className="vital-unit">%</span>
+            </div>
+            <span className="vital-label">Blood Oxygen (SpO2)</span>
+          </div>
+
+          {/* 4. Arterial Compliance / HRV Card */}
+          <div
+            className="vital-card glass-card"
+            onClick={() => navigate('/bp-monitor')}
+          >
+            <div className="vital-card-top">
+              <div className="vital-icon-box" style={{ background: 'rgba(124, 58, 237, 0.15)', color: '#a855f7' }}>
+                <FaBrain />
+              </div>
+              <span className="vital-badge normal-badge" style={{ color: '#a855f7', background: 'rgba(124, 58, 237, 0.12)' }}>
+                {vascularElasticity || 'Optimal Elasticity'}
+              </span>
+            </div>
+            <div className="vital-value-row">
+              <span className="vital-number">{hrv}</span>
+              <span className="vital-unit">ms</span>
+            </div>
+            <span className="vital-label">Heart Rate Variability (HRV)</span>
+          </div>
         </div>
       </div>
 
-      {/* 3. Recent Scans Section (From UI Screenshot) */}
+      {/* 3. Recent Scans Section (From Database Records) */}
       <div className="section-container">
         <div className="section-header-row">
-          <h2 className="section-heading">Recent Scans</h2>
+          <h2 className="section-heading">Recent Scans & Database Telemetry</h2>
           <button
             className="view-all-link"
             onClick={() => navigate('/records')}
           >
-            View All →
+            View All ({recentScans.length}) →
           </button>
         </div>
 
         <div className="recent-scans-list">
-          {/* Scan Item 1 */}
-          <div
-            className="scan-item-card glass-card"
-            onClick={() => navigate('/prescription')}
-          >
-            <div className="scan-item-icon-wrapper prescription-icon-bg">
-              <FaPrescription />
-            </div>
-            <div className="scan-item-info">
-              <h4 className="scan-title">Dr. Chen's Prescription</h4>
-              <span className="scan-subtitle">Processed: Today, 09:42 AM</span>
-            </div>
-            <div className="scan-item-action">
-              <span className="analyzed-tag">
-                <FaCheckCircle className="tag-check" /> Analyzed
-              </span>
-              <span className="details-link">
-                View Details <FaArrowRight className="arrow-icon" />
-              </span>
-            </div>
-          </div>
+          {recentScans && recentScans.length > 0 ? (
+            recentScans.map((scan) => {
+              const isBp = scan.type === 'bp';
+              const isRx = scan.type === 'prescription';
+              const isReport = scan.type === 'report';
 
-          {/* Scan Item 2 */}
-          <div
-            className="scan-item-card glass-card"
-            onClick={() => navigate('/report')}
-          >
-            <div className="scan-item-icon-wrapper lab-icon-bg">
-              <FaFlask />
+              const icon = isBp ? <FaHeartbeat /> : isRx ? <FaPrescription /> : isReport ? <FaFlask /> : <FaFileMedical />;
+              const iconClass = isBp ? 'heart-icon-bg' : isRx ? 'prescription-icon-bg' : isReport ? 'lab-icon-bg' : 'prescription-icon-bg';
+              const dest = isBp ? '/bp-monitor' : isRx ? '/prescription' : isReport ? '/report' : '/records';
+              
+              const formattedDate = scan.createdAt ? new Date(scan.createdAt).toLocaleString([], {
+                month: 'short',
+                day: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+              }) : 'Recently';
+
+              return (
+                <div
+                  key={scan._id || scan.id}
+                  className="scan-item-card glass-card"
+                  onClick={() => navigate(dest)}
+                >
+                  <div className={`scan-item-icon-wrapper ${iconClass}`}>
+                    {icon}
+                  </div>
+                  <div className="scan-item-info">
+                    <h4 className="scan-title">{scan.title}</h4>
+                    <span className="scan-subtitle">
+                      Processed: {formattedDate} {scan.data?.bpString ? `• ${scan.data.bpString} mmHg` : ''}
+                    </span>
+                  </div>
+                  <div className="scan-item-action">
+                    <span className="analyzed-tag">
+                      <FaCheckCircle className="tag-check" /> Verified
+                    </span>
+                    <span className="details-link">
+                      View Details <FaArrowRight className="arrow-icon" />
+                    </span>
+                  </div>
+                </div>
+              );
+            })
+          ) : (
+            <div className="scan-item-card glass-card" onClick={() => navigate('/bp-monitor')}>
+              <div className="scan-item-icon-wrapper heart-icon-bg">
+                <FaHeartbeat />
+              </div>
+              <div className="scan-item-info">
+                <h4 className="scan-title">No Scan Records Yet</h4>
+                <span className="scan-subtitle">Tap to take your first optical BP & vital scan</span>
+              </div>
+              <div className="scan-item-action">
+                <span className="details-link">
+                  Start Scan <FaArrowRight className="arrow-icon" />
+                </span>
+              </div>
             </div>
-            <div className="scan-item-info">
-              <h4 className="scan-title">Q3 Comprehensive Panel</h4>
-              <span className="scan-subtitle">Processed: Oct 12, 2023</span>
-            </div>
-            <div className="scan-item-action">
-              <span className="analyzed-tag">
-                <FaCheckCircle className="tag-check" /> Analyzed
-              </span>
-              <span className="details-link">
-                View Details <FaArrowRight className="arrow-icon" />
-              </span>
-            </div>
-          </div>
+          )}
         </div>
       </div>
 
