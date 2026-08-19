@@ -37,6 +37,83 @@ import { ANIMATED_AVATARS, DEFAULT_AVATAR } from '../../constants/avatarCharacte
 import toast from 'react-hot-toast';
 import './Settings.css';
 
+export const GLOBAL_COUNTRY_CODES = [
+  { code: '+91', country: 'India', flag: '🇮🇳', display: '🇮🇳 +91 (India)' },
+  { code: '+1', country: 'United States / Canada', flag: '🇺🇸', display: '🇺🇸 +1 (USA / Canada)' },
+  { code: '+44', country: 'United Kingdom', flag: '🇬🇧', display: '🇬🇧 +44 (UK)' },
+  { code: '+971', country: 'United Arab Emirates', flag: '🇦🇪', display: '🇦🇪 +971 (UAE)' },
+  { code: '+966', country: 'Saudi Arabia', flag: '🇸🇦', display: '🇸🇦 +966 (Saudi Arabia)' },
+  { code: '+65', country: 'Singapore', flag: '🇸🇬', display: '🇸🇬 +65 (Singapore)' },
+  { code: '+61', country: 'Australia', flag: '🇦🇺', display: '🇦🇺 +61 (Australia)' },
+  { code: '+49', country: 'Germany', flag: '🇩🇪', display: '🇩🇪 +49 (Germany)' },
+  { code: '+33', country: 'France', flag: '🇫🇷', display: '🇫🇷 +33 (France)' },
+  { code: '+81', country: 'Japan', flag: '🇯🇵', display: '🇯🇵 +81 (Japan)' },
+  { code: '+86', country: 'China', flag: '🇨🇳', display: '🇨🇳 +86 (China)' },
+  { code: '+82', country: 'South Korea', flag: '🇰🇷', display: '🇰🇷 +82 (South Korea)' },
+  { code: '+7', country: 'Russia / Kazakhstan', flag: '🇷🇺', display: '🇷🇺 +7 (Russia)' },
+  { code: '+55', country: 'Brazil', flag: '🇧🇷', display: '🇧🇷 +55 (Brazil)' },
+  { code: '+27', country: 'South Africa', flag: '🇿🇦', display: '🇿🇦 +27 (South Africa)' },
+  { code: '+39', country: 'Italy', flag: '🇮🇹', display: '🇮🇹 +39 (Italy)' },
+  { code: '+34', country: 'Spain', flag: '🇪🇸', display: '🇪🇸 +34 (Spain)' },
+  { code: '+31', country: 'Netherlands', flag: '🇳🇱', display: '🇳🇱 +31 (Netherlands)' },
+  { code: '+41', country: 'Switzerland', flag: '🇨🇭', display: '🇨🇭 +41 (Switzerland)' },
+  { code: '+46', country: 'Sweden', flag: '🇸🇪', display: '🇸🇪 +46 (Sweden)' },
+  { code: '+47', country: 'Norway', flag: '🇳🇴', display: '🇳🇴 +47 (Norway)' },
+  { code: '+45', country: 'Denmark', flag: '🇩🇰', display: '🇩🇰 +45 (Denmark)' },
+  { code: '+358', country: 'Finland', flag: '🇫🇮', display: '🇫🇮 +358 (Finland)' },
+  { code: '+353', country: 'Ireland', flag: '🇮🇪', display: '🇮🇪 +353 (Ireland)' },
+  { code: '+64', country: 'New Zealand', flag: '🇳🇿', display: '🇳🇿 +64 (New Zealand)' },
+  { code: '+60', country: 'Malaysia', flag: '🇲🇾', display: '🇲🇾 +60 (Malaysia)' },
+  { code: '+62', country: 'Indonesia', flag: '🇮🇩', display: '🇮🇩 +62 (Indonesia)' },
+  { code: '+63', country: 'Philippines', flag: '🇵🇭', display: '🇵🇭 +63 (Philippines)' },
+  { code: '+66', country: 'Thailand', flag: '🇹🇭', display: '🇹🇭 +66 (Thailand)' },
+  { code: '+84', country: 'Vietnam', flag: '🇻🇳', display: '🇻🇳 +84 (Vietnam)' },
+  { code: '+880', country: 'Bangladesh', flag: '🇧🇩', display: '🇧🇩 +880 (Bangladesh)' },
+  { code: '+94', country: 'Sri Lanka', flag: '🇱🇰', display: '🇱🇰 +94 (Sri Lanka)' },
+  { code: '+977', country: 'Nepal', flag: '🇳🇵', display: '🇳🇵 +977 (Nepal)' },
+  { code: '+92', country: 'Pakistan', flag: '🇵🇰', display: '🇵🇰 +92 (Pakistan)' },
+  { code: '+974', country: 'Qatar', flag: '🇶🇦', display: '🇶🇦 +974 (Qatar)' },
+  { code: '+965', country: 'Kuwait', flag: '🇰🇼', display: '🇰🇼 +965 (Kuwait)' },
+  { code: '+968', country: 'Oman', flag: '🇴🇲', display: '🇴🇲 +968 (Oman)' },
+  { code: '+973', country: 'Bahrain', flag: '🇧🇭', display: '🇧🇭 +973 (Bahrain)' },
+  { code: '+20', country: 'Egypt', flag: '🇪🇬', display: '🇪🇬 +20 (Egypt)' },
+  { code: '+234', country: 'Nigeria', flag: '🇳🇬', display: '🇳🇬 +234 (Nigeria)' },
+  { code: '+254', country: 'Kenya', flag: '🇰🇪', display: '🇰🇪 +254 (Kenya)' },
+  { code: '+233', country: 'Ghana', flag: '🇬🇭', display: '🇬🇭 +233 (Ghana)' },
+  { code: '+52', country: 'Mexico', flag: '🇲🇽', display: '🇲🇽 +52 (Mexico)' },
+  { code: '+54', country: 'Argentina', flag: '🇦🇷', display: '🇦🇷 +54 (Argentina)' },
+  { code: '+56', country: 'Chile', flag: '🇨🇱', display: '🇨🇱 +56 (Chile)' },
+  { code: '+57', country: 'Colombia', flag: '🇨🇴', display: '🇨🇴 +57 (Colombia)' },
+  { code: '+51', country: 'Peru', flag: '🇵🇪', display: '🇵🇪 +51 (Peru)' },
+  { code: '+90', country: 'Turkey', flag: '🇹🇷', display: '🇹🇷 +90 (Turkey)' },
+  { code: '+30', country: 'Greece', flag: '🇬🇷', display: '🇬🇷 +30 (Greece)' },
+  { code: '+48', country: 'Poland', flag: '🇵🇱', display: '🇵🇱 +48 (Poland)' },
+  { code: '+351', country: 'Portugal', flag: '🇵🇹', display: '🇵🇹 +351 (Portugal)' },
+  { code: '+43', country: 'Austria', flag: '🇦🇹', display: '🇦🇹 +43 (Austria)' },
+  { code: '+32', country: 'Belgium', flag: '🇧🇪', display: '🇧🇪 +32 (Belgium)' },
+  { code: '+420', country: 'Czech Republic', flag: '🇨🇿', display: '🇨🇿 +420 (Czech Republic)' },
+  { code: '+36', country: 'Hungary', flag: '🇭🇺', display: '🇭🇺 +36 (Hungary)' },
+  { code: '+40', country: 'Romania', flag: '🇷🇴', display: '🇷🇴 +40 (Romania)' },
+  { code: '+380', country: 'Ukraine', flag: '🇺🇦', display: '🇺🇦 +380 (Ukraine)' },
+  { code: '+972', country: 'Israel', flag: '🇮🇱', display: '🇮🇱 +972 (Israel)' },
+  { code: '+962', country: 'Jordan', flag: '🇯🇴', display: '🇯🇴 +962 (Jordan)' },
+  { code: '+961', country: 'Lebanon', flag: '🇱🇧', display: '🇱🇧 +961 (Lebanon)' },
+  { code: '+852', country: 'Hong Kong', flag: '🇭🇰', display: '🇭🇰 +852 (Hong Kong)' },
+  { code: '+886', country: 'Taiwan', flag: '🇹🇼', display: '🇹🇼 +886 (Taiwan)' }
+];
+
+function splitCountryCodeAndPhone(rawPhone, defaultCode = '+91') {
+  if (!rawPhone) return { code: defaultCode, number: '' };
+  const trimmed = String(rawPhone).trim();
+  for (const item of GLOBAL_COUNTRY_CODES) {
+    if (trimmed.startsWith(item.code)) {
+      const remaining = trimmed.slice(item.code.length).trim();
+      return { code: item.code, number: remaining };
+    }
+  }
+  return { code: defaultCode, number: trimmed.replace(/^\+\d+\s*/, '') };
+}
+
 const Settings = () => {
   const navigate = useNavigate();
   const location = useLocation();
@@ -77,10 +154,21 @@ const Settings = () => {
   const [profileHealthId, setProfileHealthId] = useState(() => user?.healthId || 'TV-8942-AI');
   const [profileEmail, setProfileEmail] = useState(() => user?.email || 'alex.mercer@titanvitals.ai');
   const [profileBloodGroup, setProfileBloodGroup] = useState(() => user?.bloodGroup || 'O+');
-  const [profilePhone, setProfilePhone] = useState(() => settings?.profile?.phone || user?.phone || '+1 (555) 234-8901');
+  
+  // Phone and Emergency Contact with International Country Calling Codes
+  const initialProfilePhone = settings?.profile?.phone || user?.phone || '+91 98765 43210';
+  const parsedProfilePhone = splitCountryCodeAndPhone(initialProfilePhone, '+91');
+  const [profileCountryCode, setProfileCountryCode] = useState(parsedProfilePhone.code);
+  const [profilePhoneNum, setProfilePhoneNum] = useState(parsedProfilePhone.number);
+
   const [profileAge, setProfileAge] = useState(() => settings?.profile?.age || user?.age || 32);
   const [emergencyName, setEmergencyName] = useState(() => settings?.profile?.emergencyContactName || user?.emergencyContactName || 'Dr. Evelyn Mercer');
-  const [emergencyPhone, setEmergencyPhone] = useState(() => settings?.profile?.emergencyContactPhone || user?.emergencyContactPhone || '+1 (555) 987-6543');
+
+  const initialEmergencyPhone = settings?.profile?.emergencyContactPhone || user?.emergencyContactPhone || '+91 98765 01234';
+  const parsedEmergencyPhone = splitCountryCodeAndPhone(initialEmergencyPhone, '+91');
+  const [emergencyCountryCode, setEmergencyCountryCode] = useState(parsedEmergencyPhone.code);
+  const [emergencyPhoneNum, setEmergencyPhoneNum] = useState(parsedEmergencyPhone.number);
+
   const [hospitalPref, setHospitalPref] = useState(() => settings?.profile?.hospitalPreference || user?.hospitalPreference || 'Titan Memorial Hospital (Zone 4)');
   const [allergies, setAllergies] = useState(() => settings?.profile?.allergies || user?.allergies || 'Penicillin, Peanuts (Mild)');
 
@@ -136,6 +224,9 @@ const Settings = () => {
       return;
     }
 
+    const fullProfilePhone = profilePhoneNum.trim() ? `${profileCountryCode} ${profilePhoneNum.trim()}` : '';
+    const fullEmergencyPhone = emergencyPhoneNum.trim() ? `${emergencyCountryCode} ${emergencyPhoneNum.trim()}` : '';
+
     setIsSavingDB(true);
     toast.loading('Saving Patient Profile & Identity...', { id: 'db-save' });
 
@@ -146,10 +237,10 @@ const Settings = () => {
         healthId: profileHealthId.trim(),
         bloodGroup: profileBloodGroup,
         avatar: profileAvatar,
-        phone: profilePhone,
+        phone: fullProfilePhone,
         age: profileAge,
         emergencyContactName: emergencyName,
-        emergencyContactPhone: emergencyPhone,
+        emergencyContactPhone: fullEmergencyPhone,
         hospitalPreference: hospitalPref,
         allergies: allergies,
         settings: settings
@@ -157,10 +248,10 @@ const Settings = () => {
 
       updateCategory('profile', {
         healthId: profileHealthId.trim(),
-        phone: profilePhone,
+        phone: fullProfilePhone,
         age: profileAge,
         emergencyContactName: emergencyName,
-        emergencyContactPhone: emergencyPhone,
+        emergencyContactPhone: fullEmergencyPhone,
         hospitalPreference: hospitalPref,
         allergies: allergies
       });
@@ -591,13 +682,28 @@ const Settings = () => {
                   </div>
 
                   <div className="form-field">
-                    <label>Phone Number</label>
-                    <input 
-                      type="tel" 
-                      value={profilePhone} 
-                      onChange={(e) => setProfilePhone(e.target.value)}
-                      placeholder="+1 (555) 234-8901"
-                    />
+                    <label>Mobile / Phone Number</label>
+                    <div className="phone-input-group">
+                      <select 
+                        className="country-code-select"
+                        value={profileCountryCode}
+                        onChange={(e) => setProfileCountryCode(e.target.value)}
+                        aria-label="Country Calling Code"
+                      >
+                        {GLOBAL_COUNTRY_CODES.map((c, i) => (
+                          <option key={`prof-cc-${c.code}-${i}`} value={c.code}>
+                            {c.display}
+                          </option>
+                        ))}
+                      </select>
+                      <input 
+                        type="tel" 
+                        className="phone-number-input"
+                        value={profilePhoneNum} 
+                        onChange={(e) => setProfilePhoneNum(e.target.value)}
+                        placeholder="98765 43210"
+                      />
+                    </div>
                   </div>
 
                   <div className="form-field">
@@ -642,13 +748,28 @@ const Settings = () => {
                   </div>
 
                   <div className="form-field">
-                    <label>Emergency Contact Phone</label>
-                    <input 
-                      type="tel" 
-                      value={emergencyPhone} 
-                      onChange={(e) => setEmergencyPhone(e.target.value)}
-                      placeholder="+1 (555) 987-6543"
-                    />
+                    <label>Emergency Contact Mobile</label>
+                    <div className="phone-input-group">
+                      <select 
+                        className="country-code-select"
+                        value={emergencyCountryCode}
+                        onChange={(e) => setEmergencyCountryCode(e.target.value)}
+                        aria-label="Emergency Country Calling Code"
+                      >
+                        {GLOBAL_COUNTRY_CODES.map((c, i) => (
+                          <option key={`em-cc-${c.code}-${i}`} value={c.code}>
+                            {c.display}
+                          </option>
+                        ))}
+                      </select>
+                      <input 
+                        type="tel" 
+                        className="phone-number-input"
+                        value={emergencyPhoneNum} 
+                        onChange={(e) => setEmergencyPhoneNum(e.target.value)}
+                        placeholder="98765 01234"
+                      />
+                    </div>
                   </div>
                 </div>
 

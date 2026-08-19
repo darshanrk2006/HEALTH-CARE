@@ -584,6 +584,60 @@ input:checked + .slider:before {
   border-color: var(--accent-cyan);
 }
 
+/* International Phone & Country Calling Code Selector */
+.phone-input-group {
+  display: flex;
+  gap: 10px;
+  width: 100%;
+  align-items: center;
+}
+
+.country-code-select {
+  flex: 0 0 160px;
+  max-width: 180px;
+  padding: 11px 12px;
+  background: var(--bg-primary);
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  color: var(--text-primary);
+  font-size: 0.88rem;
+  font-weight: 600;
+  outline: none;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.country-code-select:hover {
+  border-color: rgba(0, 212, 255, 0.4);
+}
+
+.country-code-select:focus {
+  border-color: var(--accent-cyan);
+  box-shadow: 0 0 10px rgba(0, 212, 255, 0.2);
+}
+
+.country-code-select option {
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+  padding: 6px;
+}
+
+.phone-number-input {
+  flex: 1;
+}
+
+@media (max-width: 600px) {
+  .phone-input-group {
+    flex-direction: column;
+    gap: 8px;
+  }
+  .country-code-select {
+    flex: 1 1 100%;
+    max-width: 100%;
+    width: 100%;
+  }
+}
+
 /* Immutable Health ID Field */
 .label-with-badge {
   display: flex !important;
