@@ -53,7 +53,7 @@ const Settings = () => {
     exportHealthData 
   } = useSettings();
 
-  const initialTab = searchParams.get('tab') || location.state?.tab || 'appearance';
+  const initialTab = searchParams.get('tab') || location.state?.tab || 'profile';
   const [activeTab, setActiveTab] = useState(initialTab);
   const [isSavingDB, setIsSavingDB] = useState(false);
   const fileInputRef = useRef(null);
@@ -240,19 +240,19 @@ const Settings = () => {
         <aside className="settings-sidebar glass-card">
           <nav className="settings-nav-list">
             <button 
-              className={`settings-nav-item ${activeTab === 'appearance' ? 'active' : ''}`}
-              onClick={() => handleTabChange('appearance')}
-            >
-              <FaPalette className="nav-item-icon" />
-              <span>Appearance & Theme</span>
-            </button>
-
-            <button 
               className={`settings-nav-item ${activeTab === 'profile' ? 'active' : ''}`}
               onClick={() => handleTabChange('profile')}
             >
               <FaUserCog className="nav-item-icon" />
               <span>Patient Profile & ID</span>
+            </button>
+
+            <button 
+              className={`settings-nav-item ${activeTab === 'appearance' ? 'active' : ''}`}
+              onClick={() => handleTabChange('appearance')}
+            >
+              <FaPalette className="nav-item-icon" />
+              <span>Appearance & Theme</span>
             </button>
 
             <button 
