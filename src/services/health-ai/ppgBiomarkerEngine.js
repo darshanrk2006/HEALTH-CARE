@@ -952,20 +952,20 @@ class PPGBiomarkerEngine {
 
     // 4. Dual Calibration Adaptor (1-Point Subject Baseline Calibration if provided)
     if (patientProfile.baselineSbp && patientProfile.baselineDbp) {
-      const sbpCorrection = (patientProfile.baselineSbp - sbpEstimated) * 0.95;
-      const dbpCorrection = (patientProfile.baselineDbp - dbpEstimated) * 0.95;
+      const sbpCorrection = (patientProfile.baselineSbp - sbpEstimated) * 0.98;
+      const dbpCorrection = (patientProfile.baselineDbp - dbpEstimated) * 0.98;
       sbpEstimated += sbpCorrection;
       dbpEstimated += dbpCorrection;
     }
 
-    // Physiological bounds & pulse pressure consistency
-    sbpEstimated = Math.round(Math.max(88, Math.min(195, sbpEstimated)));
-    dbpEstimated = Math.round(Math.max(52, Math.min(125, dbpEstimated)));
+    // Physiological bounds & pulse pressure consistency (covers normotensive up to critical ICU hypertension)
+    sbpEstimated = Math.round(Math.max(75, Math.min(215, sbpEstimated)));
+    dbpEstimated = Math.round(Math.max(45, Math.min(135, dbpEstimated)));
 
-    if (sbpEstimated - dbpEstimated < 25) {
-      sbpEstimated = dbpEstimated + 30;
-    } else if (sbpEstimated - dbpEstimated > 105) {
-      sbpEstimated = dbpEstimated + 95;
+    if (sbpEstimated - dbpEstimated < 20) {
+      sbpEstimated = dbpEstimated + 25;
+    } else if (sbpEstimated - dbpEstimated > 115) {
+      sbpEstimated = dbpEstimated + 105;
     }
 
     // 5. Mean Arterial Pressure (MAP) & Pulse Pressure (PP)
