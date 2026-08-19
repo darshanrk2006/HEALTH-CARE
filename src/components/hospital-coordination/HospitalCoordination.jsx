@@ -15,6 +15,7 @@ import {
 } from 'react-icons/fa';
 import toast from 'react-hot-toast';
 import { getPublicHospitalsApi, reserveHospitalBedApi } from '../../services/adminService';
+import { GLOBAL_COUNTRY_CODES } from '../../constants/countryCodes';
 import './HospitalCoordination.css';
 
 const HospitalCoordination = () => {
@@ -48,9 +49,10 @@ const HospitalCoordination = () => {
     return () => clearInterval(interval);
   }, []);
 
+  const [bookingCountryCode, setBookingCountryCode] = useState('+91');
   const [bookingForm, setBookingForm] = useState({
     patientName: 'Alex Mercer',
-    phone: '+1 555-0199',
+    phone: '98765 43210',
     bedType: 'ICU Bed',
     needAmbulance: true,
     conditionSummary: 'Acute Chest Tightness & Elevated BP'
@@ -67,7 +69,9 @@ const HospitalCoordination = () => {
     if (!selectedHospital) return;
 
     try {
-      const res = await reserveHospitalBedApi(selectedHospital._id, bookingForm);
+      const fullPhone = bookingForm.phone ? `${bookingCountryCode} ${bookingForm.phone}`.trim() : '';
+      const payload = { ...bookingForm, phone: fullPhone };
+      const res = await reserveHospitalBedApi(selectedHospital._id, payload);
       const token = res.token || `TV-BED-${Math.floor(1000 + Math.random() * 9000)}-${selectedHospital.name.slice(0, 3).toUpperCase()}`;
 
       setReservationSuccess({
@@ -263,12 +267,39 @@ const HospitalCoordination = () => {
 
                 <div className="form-group">
                   <label>Contact Phone Number</label>
-                  <input 
-                    type="tel" 
-                    value={bookingForm.phone} 
-                    onChange={(e) => setBookingForm({ ...bookingForm, phone: e.target.value })}
-                    required
-                  />
+                  <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                    <select 
+                      style={{ 
+                        flex: '0 0 110px', 
+                        background: 'rgba(255, 255, 255, 0.05)', 
+                        border: '1px solid rgba(255, 255, 255, 0.15)', 
+                        borderRadius: '10px', 
+                        color: '#fff', 
+                        padding: '10px 8px', 
+                        fontSize: '0.88rem', 
+                        fontWeight: '600',
+                        outline: 'none',
+                        cursor: 'pointer'
+                      }}
+                      value={bookingCountryCode}
+                      onChange={(e) => setBookingCountryCode(e.target.value)}
+                      title="Select Country Calling Code"
+                    >
+                      {GLOBAL_COUNTRY_CODES.map((c, i) => (
+                        <option key={`hosp-cc-${c.code}-${i}`} value={c.code} style={{ background: '#111827', color: '#fff' }} title={`${c.country} (${c.code})`}>
+                          {c.flag} {c.code}
+                        </option>
+                      ))}
+                    </select>
+                    <input 
+                      type="tel" 
+                      style={{ flex: 1 }}
+                      placeholder="98765 43210"
+                      value={bookingForm.phone} 
+                      onChange={(e) => setBookingForm({ ...bookingForm, phone: e.target.value.replace(/[^\d\s-]/g, '') })}
+                      required
+                    />
+                  </div>
                 </div>
 
                 <div className="form-group">

@@ -22,6 +22,7 @@ import {
   FaPaste,
   FaClipboardCheck
 } from 'react-icons/fa';
+import { GLOBAL_COUNTRY_CODES } from '../../constants/countryCodes';
 import toast from 'react-hot-toast';
 import './Login.css';
 
@@ -142,26 +143,6 @@ const OtpSixBoxInput = ({ value, onChange, onComplete, disabled }) => {
     </div>
   );
 };
-
-const COUNTRIES = [
-  { code: '+91', label: 'India (+91)', flag: '🇮🇳', name: 'India' },
-  { code: '+1', label: 'USA / Canada (+1)', flag: '🇺🇸', name: 'USA' },
-  { code: '+44', label: 'UK (+44)', flag: '🇬🇧', name: 'UK' },
-  { code: '+971', label: 'UAE (+971)', flag: '🇦🇪', name: 'UAE' },
-  { code: '+65', label: 'Singapore (+65)', flag: '🇸🇬', name: 'Singapore' },
-  { code: '+61', label: 'Australia (+61)', flag: '🇦🇺', name: 'Australia' },
-  { code: '+49', label: 'Germany (+49)', flag: '🇩🇪', name: 'Germany' },
-  { code: '+33', label: 'France (+33)', flag: '🇫🇷', name: 'France' },
-  { code: '+81', label: 'Japan (+81)', flag: '🇯🇵', name: 'Japan' },
-  { code: '+966', label: 'Saudi Arabia (+966)', flag: '🇸🇦', name: 'Saudi Arabia' },
-  { code: '+60', label: 'Malaysia (+60)', flag: '🇲🇾', name: 'Malaysia' },
-  { code: '+880', label: 'Bangladesh (+880)', flag: '🇧🇩', name: 'Bangladesh' },
-  { code: '+94', label: 'Sri Lanka (+94)', flag: '🇱🇰', name: 'Sri Lanka' },
-  { code: '+977', label: 'Nepal (+977)', flag: '🇳🇵', name: 'Nepal' },
-  { code: '+234', label: 'Nigeria (+234)', flag: '🇳🇬', name: 'Nigeria' },
-  { code: '+27', label: 'South Africa (+27)', flag: '🇿🇦', name: 'South Africa' },
-  { code: '+55', label: 'Brazil (+55)', flag: '🇧🇷', name: 'Brazil' }
-];
 
 const Login = () => {
   const navigate = useNavigate();
@@ -783,9 +764,9 @@ const Login = () => {
                           onChange={(e) => setCountryCode(e.target.value)}
                           title="Select Country Dial Code"
                         >
-                          {COUNTRIES.map((c) => (
-                            <option key={c.code + c.name} value={c.code}>
-                              {c.flag} {c.code} ({c.name})
+                          {GLOBAL_COUNTRY_CODES.map((c, i) => (
+                            <option key={`login-cc-${c.code}-${i}`} value={c.code} title={`${c.country} (${c.code})`}>
+                              {c.flag} {c.code}
                             </option>
                           ))}
                         </select>
