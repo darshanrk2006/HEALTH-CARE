@@ -11,8 +11,7 @@ import {
   FaShieldAlt,
   FaSearch,
   FaTimes,
-  FaIdCard,
-  FaUserShield
+  FaIdCard
 } from 'react-icons/fa';
 import toast from 'react-hot-toast';
 import { getPublicHospitalsApi, reserveHospitalBedApi } from '../../services/adminService';
@@ -107,15 +106,6 @@ const HospitalCoordination = () => {
             Live ICU, Oxygen, and General Ward bed tracking with instant digital reservation tokens.
           </p>
         </div>
-
-        <button
-          className="admin-manage-beds-btn"
-          onClick={() => navigate('/admin/login')}
-          title="Hospital Admin Portal (Admin ID: 2319)"
-        >
-          <FaUserShield />
-          <span>Admin Bed Manager</span>
-        </button>
       </div>
 
       {/* Filter and Search Bar */}
