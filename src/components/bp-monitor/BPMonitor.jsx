@@ -20,7 +20,9 @@ import {
   FaGlobe,
   FaDownload,
   FaFlask,
-  FaMicrochip
+  FaMicrochip,
+  FaPlay,
+  FaPause
 } from 'react-icons/fa';
 import { aiService } from '../../services/health-ai/aiService';
 import { ppgEngine } from '../../services/health-ai/ppgBiomarkerEngine';
