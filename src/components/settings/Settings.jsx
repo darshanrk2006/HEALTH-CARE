@@ -79,19 +79,25 @@ const Settings = () => {
   const [profileEmail, setProfileEmail] = useState(() => user?.email || 'alex.mercer@titanvitals.ai');
   const [profileBloodGroup, setProfileBloodGroup] = useState(() => user?.bloodGroup || 'O+');
   
-  // Phone and Emergency Contact with International Country Calling Codes
-  const initialProfilePhone = settings?.profile?.phone || user?.phone || '+91 98765 43210';
-  const parsedProfilePhone = splitCountryCodeAndPhone(initialProfilePhone, '+91');
-  const [profileCountryCode, setProfileCountryCode] = useState(parsedProfilePhone.code);
-  const [profilePhoneNum, setProfilePhoneNum] = useState(parsedProfilePhone.number);
+  // Phone and Emergency Contact with International Country Calling Codes (India +91 Default)
+  const rawProfilePhone = settings?.profile?.phone || user?.phone || '';
+  const cleanProfilePhone = (!rawProfilePhone || rawProfilePhone.includes('(555) 234-8901') || rawProfilePhone.includes('+1 (555)'))
+    ? '+91 98765 43210'
+    : rawProfilePhone;
+  const parsedProfilePhone = splitCountryCodeAndPhone(cleanProfilePhone, '+91');
+  const [profileCountryCode, setProfileCountryCode] = useState(parsedProfilePhone.code || '+91');
+  const [profilePhoneNum, setProfilePhoneNum] = useState(parsedProfilePhone.number || '98765 43210');
 
   const [profileAge, setProfileAge] = useState(() => settings?.profile?.age || user?.age || 32);
   const [emergencyName, setEmergencyName] = useState(() => settings?.profile?.emergencyContactName || user?.emergencyContactName || 'Dr. Evelyn Mercer');
 
-  const initialEmergencyPhone = settings?.profile?.emergencyContactPhone || user?.emergencyContactPhone || '+91 98765 01234';
-  const parsedEmergencyPhone = splitCountryCodeAndPhone(initialEmergencyPhone, '+91');
-  const [emergencyCountryCode, setEmergencyCountryCode] = useState(parsedEmergencyPhone.code);
-  const [emergencyPhoneNum, setEmergencyPhoneNum] = useState(parsedEmergencyPhone.number);
+  const rawEmergencyPhone = settings?.profile?.emergencyContactPhone || user?.emergencyContactPhone || '';
+  const cleanEmergencyPhone = (!rawEmergencyPhone || rawEmergencyPhone.includes('(555) 987-6543') || rawEmergencyPhone.includes('+1 (555)'))
+    ? '+91 98765 01234'
+    : rawEmergencyPhone;
+  const parsedEmergencyPhone = splitCountryCodeAndPhone(cleanEmergencyPhone, '+91');
+  const [emergencyCountryCode, setEmergencyCountryCode] = useState(parsedEmergencyPhone.code || '+91');
+  const [emergencyPhoneNum, setEmergencyPhoneNum] = useState(parsedEmergencyPhone.number || '98765 01234');
 
   const [hospitalPref, setHospitalPref] = useState(() => settings?.profile?.hospitalPreference || user?.hospitalPreference || 'Titan Memorial Hospital (Zone 4)');
   const [allergies, setAllergies] = useState(() => settings?.profile?.allergies || user?.allergies || 'Penicillin, Peanuts (Mild)');

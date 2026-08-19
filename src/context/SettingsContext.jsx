@@ -44,10 +44,10 @@ export const DEFAULT_SETTINGS = {
     dailyCheckupPrompt: true,
   },
   profile: {
-    phone: '+1 (555) 234-8901',
+    phone: '+91 98765 43210',
     age: 32,
     emergencyContactName: 'Dr. Evelyn Mercer',
-    emergencyContactPhone: '+1 (555) 987-6543',
+    emergencyContactPhone: '+91 98765 01234',
     hospitalPreference: 'Titan Memorial Hospital (Zone 4)',
     allergies: 'Penicillin, Peanuts (Mild)',
   }
