@@ -622,7 +622,7 @@ const Settings = () => {
                       >
                         {GLOBAL_COUNTRY_CODES.map((c, i) => (
                           <option key={`prof-cc-${c.code}-${i}`} value={c.code} title={`${c.country} (${c.code})`}>
-                            {c.flag} {c.code}
+                            {c.display}
                           </option>
                         ))}
                       </select>
@@ -688,7 +688,7 @@ const Settings = () => {
                       >
                         {GLOBAL_COUNTRY_CODES.map((c, i) => (
                           <option key={`em-cc-${c.code}-${i}`} value={c.code} title={`${c.country} (${c.code})`}>
-                            {c.flag} {c.code}
+                            {c.display}
                           </option>
                         ))}
                       </select>

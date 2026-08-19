@@ -270,7 +270,7 @@ const HospitalCoordination = () => {
                   <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
                     <select 
                       style={{ 
-                        flex: '0 0 110px', 
+                        flex: '0 0 135px', 
                         background: 'rgba(255, 255, 255, 0.05)', 
                         border: '1px solid rgba(255, 255, 255, 0.15)', 
                         borderRadius: '10px', 
@@ -287,7 +287,7 @@ const HospitalCoordination = () => {
                     >
                       {GLOBAL_COUNTRY_CODES.map((c, i) => (
                         <option key={`hosp-cc-${c.code}-${i}`} value={c.code} style={{ background: '#111827', color: '#fff' }} title={`${c.country} (${c.code})`}>
-                          {c.flag} {c.code}
+                          {c.display}
                         </option>
                       ))}
                     </select>
